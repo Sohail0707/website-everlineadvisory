@@ -1,0 +1,154 @@
+---
+/**
+ * Contact form, wired for Netlify Forms (detected at deploy time from the static HTML).
+ * Locally the POST has nowhere to go — test submissions on a Netlify deploy preview.
+ */
+import { contact } from '../data/site';
+---
+
+<form
+  id="contact-form"
+  class="form"
+  name="contact"
+  method="POST"
+  action="/thanks/"
+  data-netlify="true"
+  netlify-honeypot="company-url"
+>
+  <input type="hidden" name="form-name" value="contact" />
+  <p class="visually-hidden" aria-hidden="true">
+    <label>Leave this empty <input name="company-url" tabindex="-1" autocomplete="off" /></label>
+  </p>
+
+  <label class="field">
+    <span class="field-label">Name</span>
+    <input class="control" type="text" name="name" placeholder="Jane Smith" autocomplete="name" required />
+  </label>
+  <label class="field">
+    <span class="field-label">Email</span>
+    <input class="control" type="email" name="email" placeholder="example@xyz.abc" autocomplete="email" required />
+  </label>
+  <label class="field field--full">
+    <span class="field-label">Company</span>
+    <input class="control" type="text" name="company" placeholder="What is your company name?" autocomplete="organization" />
+  </label>
+  <label class="field">
+    <span class="field-label">Stage</span>
+    <span class="select">
+      <select class="control" name="stage" required>
+        <option value="" disabled selected hidden>Select…</option>
+        {contact.stages.map((s) => <option>{s}</option>)}
+      </select>
+    </span>
+  </label>
+  <label class="field">
+    <span class="field-label">What do you need help with?</span>
+    <span class="select">
+      <select class="control" name="need" required>
+        <option value="" disabled selected hidden>Select…</option>
+        {contact.needs.map((n) => <option>{n}</option>)}
+      </select>
+    </span>
+  </label>
+  <label class="field field--full">
+    <span class="field-label">Message</span>
+    <textarea class="control control--area" name="message" placeholder="Anything else should I know before we talk?"></textarea>
+  </label>
+  <button class="send field--full" type="submit">Send</button>
+</form>
+
+<style>
+  .form {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 24px;
+  }
+  .field {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    min-width: 0;
+  }
+  .field--full {
+    grid-column: 1 / -1;
+  }
+  .field-label {
+    font-size: 12px;
+    line-height: 1.2;
+    font-weight: 500;
+    color: var(--c-text);
+  }
+  .control {
+    width: 100%;
+    height: 40px;
+    padding: 12px;
+    border: 1px solid var(--c-border);
+    border-radius: 0;
+    background: transparent;
+    font-family: var(--ff-sans);
+    font-size: 14px;
+    line-height: 1.2;
+    font-weight: 400;
+    color: var(--c-text);
+    transition: border-color 0.2s ease;
+  }
+  .control::placeholder {
+    color: var(--c-placeholder);
+    opacity: 1;
+  }
+  .control:focus {
+    outline: none;
+    border-color: var(--c-text-nav);
+  }
+  .control:focus-visible {
+    outline: none;
+    border-color: var(--c-text);
+  }
+  .control--area {
+    height: 100px;
+    resize: vertical;
+  }
+  .select {
+    position: relative;
+    display: block;
+  }
+  .select select {
+    appearance: none;
+    padding: 0 36px 0 12px;
+    cursor: pointer;
+  }
+  .select select:invalid {
+    color: var(--c-placeholder);
+  }
+  .select select option {
+    color: var(--c-text);
+  }
+  .select::after {
+    content: '';
+    position: absolute;
+    right: 14px;
+    top: 50%;
+    width: 7px;
+    height: 7px;
+    border-right: 1px solid var(--c-text-nav);
+    border-bottom: 1px solid var(--c-text-nav);
+    transform: translateY(-70%) rotate(45deg);
+    pointer-events: none;
+  }
+  .send {
+    height: 48px;
+    border: 1px solid var(--c-bg-dark);
+    color: var(--c-bg-dark);
+    font-size: 14px;
+    font-weight: 400;
+    transition:
+      background-color 0.2s ease,
+      color 0.2s ease;
+  }
+
+  @media (max-width: 839.98px) {
+    .form {
+      grid-template-columns: 1fr;
+    }
+  }
+</style>

@@ -1,0 +1,440 @@
+---
+/**
+ * Booking panel — a lightweight vanilla port of the Framer BookingPanel.tsx code component.
+ * Server-renders the initial month so there is no layout shift; the client script only
+ * handles month navigation and selection. "Confirm" hands the chosen slot to the contact form.
+ */
+import { buildMonth, dayLabel, firstOpenDay, monthLabel, todayIso } from '../scripts/calendar';
+
+interface Props {
+  title: string;
+  label: string;
+  meta: string;
+  timeSlots: string[];
+  defaultSlot: string;
+  openWeekdays: number[];
+}
+
+const { title, label, meta, timeSlots, defaultSlot, openWeekdays } = Astro.props;
+
+const today = todayIso();
+const selected = firstOpenDay(today, openWeekdays);
+const [y, m] = selected.split('-').map(Number);
+const cells = buildMonth(y, m - 1, today, openWeekdays);
+const weekdays = ['S', 'M', 'T', 'W', 'T', 'F', 'S'];
+const weekdayNames = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+---
+
+<div
+  class="bp"
+  data-booking
+  data-open-weekdays={openWeekdays.join(',')}
+  data-selected={selected}
+  data-slot={defaultSlot}
+>
+  <div class="bp-panel">
+    <div class="bp-head">
+      <h3 class="bp-title">{title}</h3>
+      <span class="bp-label">{label}</span>
+    </div>
+    <div class="bp-body">
+      <div class="bp-cal">
+        <div class="bp-nav">
+          <span class="bp-month" aria-live="polite" data-month>{monthLabel(y, m - 1)}</span>
+          <div class="bp-arrows">
+            <button class="bp-arrow" type="button" data-prev aria-label="Previous month">‹</button>
+            <button class="bp-arrow" type="button" data-next aria-label="Next month">›</button>
+          </div>
+        </div>
+        <div class="bp-grid" role="group" aria-label="Choose a date">
+          {weekdays.map((d, i) => <span class="bp-cell" data-head title={weekdayNames[i]} aria-hidden="true">{d}</span>)}
+          <div class="bp-days" data-days>
+            {cells.map((c) =>
+              c.day === null ? (
+                <span class="bp-cell" />
+              ) : (
+                <button
+                  type="button"
+                  class="bp-cell"
+                  data-iso={c.iso}
+                  data-open={c.open ? '' : undefined}
+                  data-closed={c.open ? undefined : ''}
+                  data-on={c.iso === selected ? '' : undefined}
+                  aria-pressed={c.iso === selected ? 'true' : 'false'}
+                  aria-label={dayLabel(c.iso!)}
+                  disabled={!c.open}
+                >
+                  {c.day}
+                </button>
+              ),
+            )}
+          </div>
+        </div>
+        <div class="bp-legend" aria-hidden="true">
+          <span class="bp-key"><span class="bp-swatch bp-swatch--on"></span>Selected</span>
+          <span class="bp-key"><span class="bp-swatch"></span>Available</span>
+        </div>
+      </div>
+      <div class="bp-rule"></div>
+      <div class="bp-slots">
+        <div class="bp-date" data-date>{dayLabel(selected)}</div>
+        <div class="bp-meta">{meta}</div>
+        <div class="bp-list" role="group" aria-label="Choose a time">
+          {timeSlots.map((t) => (
+            <button
+              type="button"
+              class="bp-slot"
+              data-time={t}
+              data-on={t === defaultSlot ? '' : undefined}
+              aria-pressed={t === defaultSlot ? 'true' : 'false'}
+            >
+              {t}
+            </button>
+          ))}
+        </div>
+      </div>
+    </div>
+    <button class="bp-confirm" type="button" data-confirm>
+      Confirm — <span data-summary>{dayLabel(selected)} at {defaultSlot}</span>
+    </button>
+  </div>
+</div>
+
+<script>
+  import { buildMonth, dayLabel, firstOpenDay, monthLabel, todayIso } from '../scripts/calendar';
+
+  document.querySelectorAll<HTMLElement>('[data-booking]').forEach((root) => {
+    const openWeekdays = (root.dataset.openWeekdays ?? '').split(',').map(Number);
+    const today = todayIso();
+    let selected = root.dataset.selected!;
+    let slot = root.dataset.slot!;
+
+    // The page may have been built days ago: never leave a past date selected.
+    if (selected < today) selected = firstOpenDay(today, openWeekdays);
+    let [viewY, viewM] = selected.split('-').map(Number);
+    viewM -= 1;
+
+    const $ = <T extends Element>(sel: string) => root.querySelector<T>(sel)!;
+    const daysEl = $<HTMLElement>('[data-days]');
+    const monthEl = $<HTMLElement>('[data-month]');
+    const dateEl = $<HTMLElement>('[data-date]');
+    const summaryEl = $<HTMLElement>('[data-summary]');
+
+    function renderDays() {
+      monthEl.textContent = monthLabel(viewY, viewM);
+      daysEl.replaceChildren(
+        ...buildMonth(viewY, viewM, today, openWeekdays).map((c) => {
+          if (c.day === null) {
+            const s = document.createElement('span');
+            s.className = 'bp-cell';
+            return s;
+          }
+          const b = document.createElement('button');
+          b.type = 'button';
+          b.className = 'bp-cell';
+          b.textContent = String(c.day);
+          b.dataset.iso = c.iso;
+          b.setAttribute('aria-label', dayLabel(c.iso!));
+          if (c.open) b.dataset.open = '';
+          else {
+            b.dataset.closed = '';
+            b.disabled = true;
+          }
+          const on = c.iso === selected;
+          if (on) b.dataset.on = '';
+          b.setAttribute('aria-pressed', String(on));
+          return b;
+        }),
+      );
+      // Copy the Astro scope attribute so scoped styles apply to client-built cells.
+      const scope = [...root.attributes].find((a) => a.name.startsWith('data-astro-cid'));
+      if (scope) daysEl.querySelectorAll('.bp-cell').forEach((el) => el.setAttribute(scope.name, ''));
+    }
+
+    function renderSelection() {
+      dateEl.textContent = dayLabel(selected);
+      summaryEl.textContent = `${dayLabel(selected)} at ${slot}`;
+      root.querySelectorAll<HTMLButtonElement>('.bp-slot').forEach((b) => {
+        const on = b.dataset.time === slot;
+        b.toggleAttribute('data-on', on);
+        b.setAttribute('aria-pressed', String(on));
+      });
+    }
+
+    daysEl.addEventListener('click', (e) => {
+      const btn = (e.target as HTMLElement).closest<HTMLButtonElement>('button[data-open]');
+      if (!btn) return;
+      selected = btn.dataset.iso!;
+      daysEl.querySelectorAll<HTMLElement>('[data-iso]').forEach((el) => {
+        const on = el.dataset.iso === selected;
+        el.toggleAttribute('data-on', on);
+        el.setAttribute('aria-pressed', String(on));
+      });
+      renderSelection();
+    });
+
+    root.querySelector('.bp-list')!.addEventListener('click', (e) => {
+      const btn = (e.target as HTMLElement).closest<HTMLButtonElement>('.bp-slot');
+      if (!btn) return;
+      slot = btn.dataset.time!;
+      renderSelection();
+    });
+
+    const step = (delta: number) => {
+      viewM += delta;
+      if (viewM < 0) [viewM, viewY] = [11, viewY - 1];
+      if (viewM > 11) [viewM, viewY] = [0, viewY + 1];
+      renderDays();
+    };
+    $('[data-prev]').addEventListener('click', () => step(-1));
+    $('[data-next]').addEventListener('click', () => step(1));
+
+    // Hand the chosen slot to the contact form.
+    $('[data-confirm]').addEventListener('click', () => {
+      const message = document.querySelector<HTMLTextAreaElement>('#contact-form textarea[name="message"]');
+      if (message) {
+        const line = `I'd like to book the intro call on ${dayLabel(selected)} at ${slot} CT.`;
+        if (!message.value.includes(line)) message.value = message.value ? `${line}\n\n${message.value}` : line;
+      }
+      document.getElementById('contact')?.scrollIntoView({ behavior: 'smooth' });
+      document.querySelector<HTMLInputElement>('#contact-form input[name="name"]')?.focus({ preventScroll: true });
+    });
+
+    if (selected !== root.dataset.selected) {
+      renderDays();
+      renderSelection();
+    }
+  });
+</script>
+
+<style>
+  .bp {
+    --ground: rgb(250 250 249 / 0.05);
+    --line: rgb(250 250 249 / 0.3);
+    --ink: #fafaf5;
+    --muted: rgb(250 250 249 / 0.5);
+    --fill: #fafaf5;
+    --fill-ink: #1f3a2e;
+    container-type: inline-size;
+    background: var(--ground);
+    font-family: var(--ff-sans);
+    font-weight: 400;
+    line-height: normal;
+  }
+  .bp-panel {
+    border: 1px solid var(--line);
+    padding: 28px;
+  }
+  .bp-head {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    padding-bottom: 20px;
+    border-bottom: 1px solid var(--line);
+    margin-bottom: 24px;
+  }
+  .bp-title {
+    color: var(--ink);
+    font-size: 19px;
+    font-weight: 400;
+  }
+  .bp-label,
+  .bp-month,
+  .bp-date,
+  .bp-key {
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+  }
+  .bp-label {
+    color: var(--muted);
+    font-size: 10px;
+  }
+  .bp-body {
+    display: flex;
+    gap: 32px;
+  }
+  .bp-rule {
+    width: 1px;
+    background: var(--line);
+    flex: 0 0 auto;
+  }
+  .bp-cal {
+    flex: 0 0 auto;
+  }
+  .bp-nav {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 18px;
+  }
+  .bp-month {
+    color: var(--ink);
+    font-size: 11px;
+  }
+  .bp-arrows {
+    display: flex;
+    gap: 6px;
+  }
+  .bp-arrow {
+    width: 26px;
+    height: 26px;
+    padding: 0;
+    border-radius: 2px;
+    border: 1px solid var(--line);
+    background: none;
+    color: var(--muted);
+    font-size: 12px;
+    line-height: 1;
+    cursor: pointer;
+    transition:
+      color 0.15s,
+      border-color 0.15s;
+  }
+  .bp-arrow:hover {
+    color: var(--ink);
+    border-color: var(--ink);
+  }
+  .bp-grid,
+  .bp-days {
+    display: grid;
+    grid-template-columns: repeat(7, 34px);
+    gap: 2px;
+  }
+  .bp-days {
+    grid-column: 1 / -1;
+    grid-template-columns: subgrid;
+  }
+  .bp-cell {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: 34px;
+    padding: 0;
+    font-size: 13px;
+    border-radius: 2px;
+    border: 1px solid transparent;
+    background: none;
+    color: var(--muted);
+    transition: border-color 0.15s;
+  }
+  .bp-cell[data-head] {
+    font-size: 10px;
+    letter-spacing: 0.1em;
+  }
+  .bp-cell[data-open] {
+    color: var(--ink);
+    border-color: var(--line);
+    cursor: pointer;
+  }
+  .bp-cell[data-open]:hover {
+    border-color: var(--ink);
+  }
+  .bp-cell[data-closed] {
+    opacity: 0.45;
+    cursor: default;
+  }
+  .bp-cell[data-on] {
+    background: var(--fill);
+    color: var(--fill-ink);
+    border-color: var(--fill);
+  }
+  .bp-legend {
+    display: flex;
+    gap: 18px;
+    margin-top: 20px;
+  }
+  .bp-key {
+    display: flex;
+    align-items: center;
+    gap: 7px;
+    color: var(--muted);
+    font-size: 9px;
+  }
+  .bp-swatch {
+    width: 10px;
+    height: 10px;
+    border: 1px solid var(--line);
+  }
+  .bp-swatch--on {
+    background: var(--fill);
+  }
+  .bp-slots {
+    flex: 1 1 0%;
+    min-width: 0;
+  }
+  .bp-date {
+    color: var(--ink);
+    font-size: 11px;
+    margin-bottom: 4px;
+  }
+  .bp-meta {
+    color: var(--muted);
+    font-size: 12px;
+    margin-bottom: 16px;
+  }
+  .bp-list {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+  .bp-slot {
+    padding: 10px 14px;
+    border: 1px solid var(--line);
+    border-radius: 2px;
+    background: none;
+    color: var(--ink);
+    font-size: 13px;
+    letter-spacing: 0.04em;
+    text-align: left;
+    cursor: pointer;
+    transition: border-color 0.15s;
+  }
+  .bp-slot:hover {
+    border-color: var(--ink);
+  }
+  .bp-slot[data-on] {
+    background: var(--fill);
+    color: var(--fill-ink);
+    border-color: var(--fill);
+  }
+  .bp-confirm {
+    display: block;
+    width: 100%;
+    margin-top: 28px;
+    padding: 16px 20px;
+    border-radius: 2px;
+    background: var(--fill);
+    color: var(--fill-ink);
+    font-size: 14px;
+    font-weight: 500;
+    text-align: left;
+    cursor: pointer;
+  }
+  .bp :focus-visible {
+    outline-color: var(--ink);
+  }
+
+  @container (max-width: 480px) {
+    .bp-body {
+      flex-direction: column;
+      gap: 24px;
+    }
+    .bp-rule {
+      width: 100%;
+      height: 1px;
+    }
+    .bp-cal {
+      width: 100%;
+    }
+    .bp-grid {
+      grid-template-columns: repeat(7, minmax(0, 1fr));
+    }
+    .bp-list {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+    }
+    .bp-panel {
+      padding: 20px;
+    }
+  }
+</style>

@@ -1,0 +1,121 @@
+---
+/**
+ * FAQ — <details>/<summary>, no JS.
+ * Phone: tap-to-expand accordion. Tablet/desktop: question | answer side by side, always open
+ * (the summary is made non-interactive there).
+ */
+import { getCollection, render } from 'astro:content';
+import { faq } from '../data/site';
+import SplitWords from './SplitWords.astro';
+
+const entries = (await getCollection('faq')).sort((a, b) => a.data.order - b.data.order);
+const items = await Promise.all(entries.map(async (entry) => ({ entry, ...(await render(entry)) })));
+---
+
+<section class="section faq" aria-labelledby="faq-heading">
+  <div class="container faq-inner" data-reveal>
+    <h2 id="faq-heading" class="t-h2 t-light"><SplitWords text={faq.heading} /></h2>
+    <div class="faq-list">
+      {items.map(({ entry, Content }) => (
+        <details class="faq-item" open>
+          <summary class="faq-q">
+            <span class="t-h4">{entry.data.question}</span>
+            <span class="faq-icon" aria-hidden="true" />
+          </summary>
+          <div class="faq-a t-body">
+            <Content />
+          </div>
+        </details>
+      ))}
+    </div>
+  </div>
+</section>
+
+<script>
+  // Phone starts collapsed; tablet/desktop always open. `open` is in the HTML so no-JS users see answers.
+  const mq = window.matchMedia('(max-width: 839.98px)');
+  const sync = () => document.querySelectorAll<HTMLDetailsElement>('.faq-item').forEach((d) => (d.open = !mq.matches));
+  sync();
+  mq.addEventListener('change', sync);
+  // Above the phone breakpoint the answers are permanently visible: ignore toggles.
+  document.querySelectorAll<HTMLElement>('.faq-q').forEach((s) =>
+    s.addEventListener('click', (e) => {
+      if (!mq.matches) e.preventDefault();
+    }),
+  );
+</script>
+
+<style>
+  .faq-inner {
+    display: flex;
+    flex-direction: column;
+    gap: var(--sp-md);
+  }
+  /* Desktop/tablet: question | answer side by side. Floats work regardless of the
+     browser's internal <details> shadow structure, unlike grid. */
+  .faq-item {
+    --gap: var(--sp-md);
+    display: flow-root;
+    padding: 24px 0;
+    box-shadow: inset 0 1px 0 var(--c-border);
+  }
+  .faq-q {
+    float: left;
+    width: calc(50% - var(--gap) / 2);
+    list-style: none;
+    display: flex;
+    justify-content: space-between;
+    gap: 10px;
+    color: var(--c-text);
+    pointer-events: none;
+  }
+  .faq-q::-webkit-details-marker {
+    display: none;
+  }
+  .faq-icon {
+    display: none;
+  }
+  .faq-a {
+    margin-left: calc(50% + var(--gap) / 2);
+    color: var(--c-text-muted);
+  }
+
+  @media (max-width: 839.98px) {
+    .faq-q {
+      float: none;
+      width: auto;
+      pointer-events: auto;
+      cursor: pointer;
+      align-items: flex-start;
+    }
+    .faq-icon {
+      position: relative;
+      display: block;
+      flex: none;
+      width: 18px;
+      height: 18px;
+      margin-top: 4px;
+    }
+    .faq-icon::before,
+    .faq-icon::after {
+      content: '';
+      position: absolute;
+      left: 0;
+      top: 8.5px;
+      width: 18px;
+      height: 1px;
+      background: var(--c-text);
+      transition: transform 0.25s var(--ease-out);
+    }
+    .faq-icon::after {
+      transform: rotate(90deg);
+    }
+    .faq-item[open] .faq-icon::after {
+      transform: rotate(0deg);
+    }
+    .faq-a {
+      margin-left: 0;
+      padding-top: 16px;
+    }
+  }
+</style>

@@ -1,0 +1,96 @@
+---
+import type { IllustrationName } from '../data/site';
+import SplitWords from './SplitWords.astro';
+import DataRoom from './illustrations/DataRoom.astro';
+import MonthlyClose from './illustrations/MonthlyClose.astro';
+import BoardDeck from './illustrations/BoardDeck.astro';
+
+interface Props {
+  id?: string;
+  heading: string;
+  eyebrow: string;
+  body: string;
+  illustration: IllustrationName;
+  side: 'left' | 'right';
+}
+
+const { id, heading, eyebrow, body, illustration, side } = Astro.props;
+const illustrations = { 'data-room': DataRoom, 'monthly-close': MonthlyClose, 'board-deck': BoardDeck };
+const Illustration = illustrations[illustration];
+---
+
+<section class:list={['section', 'service', `service--${side}`]} id={id}>
+  <div class="container service-inner" data-reveal>
+    <div class="service-media">
+      <Illustration />
+    </div>
+    <div class="service-copy">
+      <div class="service-text">
+        <h2 class="t-h3 service-heading"><SplitWords text={heading} /></h2>
+        <p class="eyebrow">{eyebrow}</p>
+        <p class="t-body service-body">{body}</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<style>
+  .service-inner {
+    display: flex;
+    align-items: center;
+    gap: var(--sp-md);
+  }
+  .service-media {
+    flex: none;
+    width: 40.015%;
+    min-width: 360px;
+  }
+  .service-media :global(svg) {
+    width: 100%;
+    height: auto;
+    /* the frame's 1px stroke sits on the viewBox edge; scaled down it gets clipped */
+    overflow: visible;
+  }
+  .service--right .service-media {
+    order: 2;
+  }
+  .service-copy {
+    flex: 1;
+    min-width: 0;
+    display: flex;
+    justify-content: center;
+  }
+  .service-text {
+    display: flex;
+    flex-direction: column;
+    gap: 18px;
+    width: 100%;
+    max-width: 490px;
+  }
+  .service-heading {
+    font-weight: 400;
+  }
+  .service-body {
+    color: var(--c-text-muted);
+  }
+
+  @media (max-width: 839.98px) {
+    .service-inner {
+      flex-direction: column;
+      align-items: stretch;
+    }
+    .service-media {
+      width: 100%;
+      min-width: 0;
+    }
+    .service--right .service-media {
+      order: 0;
+    }
+    .service-text {
+      max-width: none;
+    }
+    .service-heading {
+      font-size: 28px;
+    }
+  }
+</style>

@@ -1,0 +1,72 @@
+---
+import { contact, site } from '../data/site';
+import ContactForm from './ContactForm.astro';
+import SplitWords from './SplitWords.astro';
+---
+
+<section class="section contact" id="contact" aria-labelledby="contact-heading">
+  <div class="container contact-inner" data-reveal>
+    <div class="contact-intro">
+      <div class="contact-heading">
+        <h2 id="contact-heading" class="t-h2"><SplitWords text={contact.heading} /></h2>
+        <p class="t-body contact-body">{contact.body}</p>
+      </div>
+      <div class="contact-direct">
+        <p class="direct-label">{contact.directLabel}</p>
+        <a class="direct-email" href={`mailto:${site.email}`}>{site.email}</a>
+      </div>
+    </div>
+    <ContactForm />
+  </div>
+</section>
+
+<style>
+  .contact-inner {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: var(--sp-md);
+    align-items: start;
+  }
+  .contact-intro {
+    display: flex;
+    flex-direction: column;
+    gap: var(--sp-md);
+  }
+  .contact-heading {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+  .contact-body {
+    color: var(--c-text-muted);
+  }
+  .contact-direct {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+  .direct-label {
+    font-size: 12px;
+    line-height: 1;
+    font-weight: 400;
+    letter-spacing: 0.15em;
+    color: var(--c-text-muted);
+  }
+  .direct-email {
+    align-self: flex-start;
+    font-size: 16px;
+    line-height: 1.6;
+    font-weight: 400;
+    color: var(--c-accent);
+  }
+  .direct-email:hover {
+    text-decoration: underline;
+    text-underline-offset: 3px;
+  }
+
+  @media (max-width: 839.98px) {
+    .contact-inner {
+      grid-template-columns: 1fr;
+    }
+  }
+</style>

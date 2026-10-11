@@ -1,0 +1,25 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+import Header from '../components/Header.astro';
+import Hero from '../components/Hero.astro';
+import About from '../components/About.astro';
+import ServiceSection from '../components/ServiceSection.astro';
+import Booking from '../components/Booking.astro';
+import FaqAccordion from '../components/FaqAccordion.astro';
+import Contact from '../components/Contact.astro';
+import Footer from '../components/Footer.astro';
+import { services } from '../data/site';
+---
+
+<BaseLayout>
+  <Header />
+  <main id="main">
+    <Hero />
+    <About />
+    {services.map((service) => <ServiceSection {...service} />)}
+    <Booking />
+    <FaqAccordion />
+    <Contact />
+  </main>
+  <Footer />
+</BaseLayout>

@@ -1,0 +1,124 @@
+---
+import { about } from '../data/site';
+import Icon from './Icon.astro';
+import SplitWords from './SplitWords.astro';
+---
+
+<section class="section about" id="about" aria-labelledby="about-heading">
+  <div class="container about-inner" data-reveal>
+    <div class="about-grid">
+      <div class="about-details">
+        <h2 id="about-heading" class="t-h2 t-light"><SplitWords text={about.heading} /></h2>
+        <ul class="creds">
+          {about.credentials.map((c) => (
+            <li>
+              <Icon name={c.icon} />
+              <span>{c.label}</span>
+            </li>
+          ))}
+        </ul>
+      </div>
+      <div class="about-story">
+        <h3 class="t-h3 quote"><SplitWords text={about.quote} /></h3>
+        <p class="t-body bio">{about.bio}</p>
+      </div>
+    </div>
+
+    <dl class="stats">
+      {about.stats.map((s) => (
+        <div class="stat">
+          <dt class="stat-label">{s.label}</dt>
+          <dd class="stat-value">{s.value}</dd>
+        </div>
+      ))}
+    </dl>
+  </div>
+</section>
+
+<style>
+  .about-inner {
+    display: flex;
+    flex-direction: column;
+    gap: var(--sp-xl);
+  }
+  .about-grid {
+    display: flex;
+    gap: var(--sp-md);
+  }
+  .about-details {
+    flex: none;
+    width: 30%;
+    display: flex;
+    flex-direction: column;
+    gap: 24px;
+  }
+  .creds {
+    border-top: 1px solid var(--c-border);
+  }
+  .creds li {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 13.5px 0;
+    border-bottom: 1px solid var(--c-border);
+    font-size: 12px;
+    line-height: 1.3;
+    font-weight: 400;
+    letter-spacing: 0.1em;
+    color: var(--c-text-nav);
+  }
+  .creds :global(.icon) {
+    flex: none;
+  }
+  .about-story {
+    flex: 1;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 24px;
+  }
+  .quote {
+    color: var(--c-accent);
+  }
+  .bio {
+    color: var(--c-text-nav);
+  }
+
+  .stats {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 36px;
+  }
+  /* label follows value visually; dt first keeps the dl semantics valid */
+  .stat {
+    display: flex;
+    flex-direction: column-reverse;
+    justify-content: flex-end;
+  }
+  .stat-value {
+    font-family: var(--ff-serif);
+    font-size: var(--fs-stats);
+    line-height: var(--lh-stats);
+    font-weight: 300;
+    color: var(--c-accent);
+  }
+  .stat-label {
+    font-size: 12px;
+    line-height: 1.2;
+    font-weight: 400;
+    letter-spacing: 0.1em;
+    color: var(--c-text-nav);
+  }
+
+  @media (max-width: 839.98px) {
+    .about-grid {
+      flex-direction: column;
+    }
+    .about-details {
+      width: 100%;
+    }
+    .stats {
+      grid-template-columns: 1fr;
+    }
+  }
+</style>

@@ -1,0 +1,91 @@
+---
+import { booking } from '../data/site';
+import SplitWords from './SplitWords.astro';
+import BookingPanel from './BookingPanel.astro';
+---
+
+<section class="section booking" id="book" aria-labelledby="book-heading">
+  <div class="container booking-inner" data-reveal>
+    <div class="booking-steps">
+      <h2 id="book-heading" class="t-h2"><SplitWords text={booking.heading} /></h2>
+      <div class="steps-wrap">
+        <h3 class="eyebrow steps-heading">{booking.stepsHeading}</h3>
+        <ol class="steps">
+          {booking.steps.map((step, i) => (
+            <li class="step">
+              <p class="step-num" aria-hidden="true">{String(i + 1).padStart(2, '0')}</p>
+              <div class="step-text">
+                <h4 class="t-h4">{step.title}</h4>
+                <p class="t-body step-body">{step.body}</p>
+              </div>
+            </li>
+          ))}
+        </ol>
+      </div>
+    </div>
+    <BookingPanel {...booking.panel} />
+  </div>
+</section>
+
+<style>
+  .booking {
+    background: var(--c-bg-dark);
+    color: var(--c-on-dark);
+    box-shadow: none;
+  }
+  .booking-inner {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: var(--sp-md);
+    align-items: start;
+  }
+  .booking-steps {
+    display: flex;
+    flex-direction: column;
+    gap: var(--sp-sm);
+  }
+  .steps-heading {
+    color: var(--c-on-dark-50);
+  }
+  .steps-wrap {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+  .steps {
+    box-shadow: inset 0 -1px 0 var(--c-on-dark-30);
+  }
+  .step {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    padding: 16px 0;
+    box-shadow: inset 0 1px 0 var(--c-on-dark-30);
+  }
+  .step-num {
+    flex: none;
+    font-family: var(--ff-mono);
+    font-size: 14px;
+    line-height: 1.3;
+    letter-spacing: 0.15em;
+    color: var(--c-on-dark-50);
+  }
+  .step-text {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    min-width: 0;
+  }
+  .step-text h4 {
+    color: var(--c-on-dark);
+  }
+  .step-body {
+    color: var(--c-on-dark-50);
+  }
+
+  @media (max-width: 839.98px) {
+    .booking-inner {
+      grid-template-columns: 1fr;
+    }
+  }
+</style>

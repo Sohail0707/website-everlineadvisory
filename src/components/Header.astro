@@ -1,0 +1,219 @@
+---
+import { site, nav, bookCta } from '../data/site';
+---
+
+<header class="site-header" data-open="false">
+  <div class="bar">
+    <a class="wordmark" href="#home">{site.name}</a>
+
+    <button
+      class="menu-btn"
+      type="button"
+      aria-expanded="false"
+      aria-controls="site-nav"
+      aria-label="Open menu"
+    >
+      <span class="menu-icon" aria-hidden="true"><span></span><span></span><span></span></span>
+    </button>
+
+    <div class="nav-wrap" id="site-nav">
+      <div class="nav-inner">
+        <nav aria-label="Primary">
+          <ul class="nav-list">
+            {nav.map((item) => (
+              <li><a class="nav-link" href={item.href}>{item.label}</a></li>
+            ))}
+          </ul>
+        </nav>
+        <a class="btn btn--outline nav-cta" href={bookCta.href}>{bookCta.label}</a>
+      </div>
+    </div>
+  </div>
+</header>
+
+<script>
+  const header = document.querySelector<HTMLElement>('.site-header');
+  const button = header?.querySelector<HTMLButtonElement>('.menu-btn');
+
+  if (header && button) {
+    const setOpen = (open: boolean) => {
+      header.dataset.open = String(open);
+      button.setAttribute('aria-expanded', String(open));
+      button.setAttribute('aria-label', open ? 'Close menu' : 'Open menu');
+    };
+
+    button.addEventListener('click', () => setOpen(header.dataset.open !== 'true'));
+    // Tapping any link closes the drawer.
+    header.querySelectorAll('#site-nav a').forEach((a) => a.addEventListener('click', () => setOpen(false)));
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape' && header.dataset.open === 'true') {
+        setOpen(false);
+        button.focus();
+      }
+    });
+    // Reset if the viewport grows past the phone breakpoint while open.
+    window.matchMedia('(min-width: 840px)').addEventListener('change', (e) => e.matches && setOpen(false));
+  }
+</script>
+
+<style>
+  .site-header {
+    position: sticky;
+    top: 0;
+    z-index: 10;
+    background: var(--c-bg);
+    box-shadow: inset 0 -1px 0 var(--c-border);
+    padding: var(--sp-xs) var(--sp-md);
+  }
+  @media (prefers-reduced-motion: no-preference) {
+    .site-header {
+      animation: header-in var(--reveal-dur) var(--ease-out) both;
+    }
+  }
+  @keyframes header-in {
+    from {
+      opacity: 0;
+      transform: translateY(-12px);
+    }
+  }
+
+  .bar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 24px;
+  }
+  .wordmark {
+    font-family: var(--ff-serif);
+    font-size: 24px;
+    line-height: 1;
+    font-weight: 500;
+    color: var(--c-accent);
+    white-space: nowrap;
+  }
+
+  .nav-inner {
+    display: flex;
+    align-items: center;
+    gap: 28px;
+  }
+  .nav-list {
+    display: flex;
+    align-items: center;
+    gap: 28px;
+  }
+  .nav-link {
+    display: block;
+    font-size: 14px;
+    line-height: 1;
+    font-weight: 500;
+    color: var(--c-text-nav);
+    transition: color 0.2s ease;
+  }
+  .nav-link:hover {
+    color: var(--c-text);
+  }
+
+  .menu-btn {
+    display: none;
+  }
+
+  /* ---------- phone: fixed bar + drawer ---------- */
+  @media (max-width: 839.98px) {
+    :global(body) {
+      padding-top: 60px;
+    }
+    .site-header {
+      position: fixed;
+      inset: 0 0 auto 0;
+      padding: 0 var(--gutter);
+    }
+    .bar {
+      display: grid;
+      grid-template-columns: 1fr auto;
+      grid-template-rows: 60px auto;
+      gap: 0;
+    }
+    .menu-btn {
+      display: grid;
+      place-items: center;
+      width: 32px;
+      height: 32px;
+      margin-right: -4px;
+      color: var(--c-text);
+    }
+    .menu-icon {
+      position: relative;
+      width: 20px;
+      height: 14px;
+    }
+    .menu-icon span {
+      position: absolute;
+      left: 0;
+      width: 100%;
+      height: 1.5px;
+      background: currentColor;
+      transition:
+        transform 0.3s var(--ease-out),
+        opacity 0.2s ease;
+    }
+    .menu-icon span:nth-child(1) {
+      top: 0;
+    }
+    .menu-icon span:nth-child(2) {
+      top: 6.25px;
+    }
+    .menu-icon span:nth-child(3) {
+      top: 12.5px;
+    }
+    [data-open='true'] .menu-icon span:nth-child(1) {
+      transform: translateY(6.25px) rotate(45deg);
+    }
+    [data-open='true'] .menu-icon span:nth-child(2) {
+      opacity: 0;
+    }
+    [data-open='true'] .menu-icon span:nth-child(3) {
+      transform: translateY(-6.25px) rotate(-45deg);
+    }
+
+    /* Drawer: 0.35s spring, bounce 0.15 (sampled as linear()) */
+    .nav-wrap {
+      grid-column: 1 / -1;
+      display: grid;
+      grid-template-rows: 0fr;
+      visibility: hidden;
+      transition:
+        grid-template-rows 0.45s
+          linear(0, 0.0468, 0.1547, 0.2878, 0.4238, 0.5498, 0.6593, 0.7503, 0.8229, 0.8791, 0.9211, 0.9515, 0.9729, 0.9872, 0.9964, 1.0019, 1.0048, 1.0061, 1.0063, 1.0058, 1.0051, 1.0042, 1.0034, 1.0026, 1),
+        visibility 0s linear 0.45s;
+    }
+    [data-open='true'] .nav-wrap {
+      grid-template-rows: 1fr;
+      visibility: visible;
+      transition-delay: 0s;
+    }
+    .nav-inner {
+      min-height: 0;
+      overflow: hidden;
+      flex-direction: column;
+      align-items: flex-start;
+      gap: 20px;
+    }
+    .nav-list {
+      flex-direction: column;
+      align-items: flex-start;
+      gap: 20px;
+      padding-top: 18px;
+    }
+    .nav-cta {
+      margin-bottom: 26px;
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .nav-wrap,
+    .menu-icon span {
+      transition: none !important;
+    }
+  }
+</style>

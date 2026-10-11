@@ -1,0 +1,100 @@
+/*
+ * Design tokens — ported from the Framer project.
+ * Fluid scales interpolate between an 840px and 1300px viewport, clamped at both ends
+ * (FluidTextSize.tsx / FluidSpacing.tsx).
+ */
+:root {
+  /* surfaces */
+  --c-bg: #ffffff;
+  --c-bg-dark: #1f3a2e;
+  --c-bg-footer: #183a2a;
+  --c-border: #e2e2df;
+
+  /* text */
+  --c-text: #22221f;
+  --c-text-muted: #76726c;
+  --c-text-nav: #6b6b66;
+  --c-accent: #917012;
+  --c-placeholder: #999999;
+
+  /* on dark */
+  --c-on-dark: #fafaf5;
+  --c-on-dark-soft: #fafaf9;
+  --c-on-dark-50: rgb(250 250 249 / 0.5);
+  --c-on-dark-30: rgb(250 250 249 / 0.3);
+  --c-on-dark-05: rgb(250 250 249 / 0.05);
+  --c-footer-heading: #f3f0e9;
+  --c-footer-text: rgb(156 175 164);
+  --c-footer-muted: rgb(145 168 156);
+
+  /* type families */
+  --ff-serif: 'Newsreader', 'Newsreader Fallback', Georgia, serif;
+  --ff-sans: 'Public Sans', 'Public Sans Fallback', system-ui, sans-serif;
+  --ff-mono: 'IBM Plex Mono', ui-monospace, 'SFMono-Regular', Menlo, Consolas, monospace;
+
+  /*
+   * Type + spacing scales.
+   * The Framer source defines these as clamp()s between 840px and 1300px, but on the live
+   * site they resolve as a step: minimum values below the 1440px desktop breakpoint,
+   * maximum values at 1440px and up. We match the live site. To make them truly fluid,
+   * replace each pair with clamp(min, …, max) — see FluidTextSize.tsx / FluidSpacing.tsx.
+   */
+  --fs-h1: 36px;
+  --fs-h2: 32px;
+  --fs-h3: 24px;
+  --fs-h4: 20px;
+  --fs-body: 16px;
+  --fs-label: 14px;
+  --fs-stats: 48px;
+  --lh-h1: 1.2;
+  --lh-h2: 1.3;
+  --lh-h3: 1.3;
+  --lh-h4: 1.3;
+  --lh-body: 1.6;
+  --lh-stats: 1.2;
+
+  --sp-xxs: 14px;
+  --sp-xs: 18px;
+  --sp-sm: 24px;
+  --sp-md: 36px;
+  --sp-lg: 48px;
+  --sp-xl: 60px;
+  --sp-xxl: 88px;
+
+  /* layout */
+  --w-content: 1312px;
+  --w-hero: 1600px;
+  --w-stacked: 600px;
+  --gutter: var(--sp-md);
+
+  /* motion */
+  --ease-out: cubic-bezier(0.22, 1, 0.36, 1);
+  --reveal-dur: 0.5s;
+  --word-stagger: 0.045s;
+}
+
+@media (min-width: 1440px) {
+  :root {
+    --fs-h1: 56px;
+    --fs-h2: 40px;
+    --fs-h3: 36px;
+    --fs-h4: 24px;
+    --fs-body: 18px;
+    --fs-label: 16px;
+    --fs-stats: 64px;
+
+    --sp-xxs: 18px;
+    --sp-xs: 24px;
+    --sp-sm: 36px;
+    --sp-md: 48px;
+    --sp-lg: 64px;
+    --sp-xl: 80px;
+    --sp-xxl: 118px;
+  }
+}
+
+@media (max-width: 839.98px) {
+  :root {
+    --gutter: var(--sp-xs);
+  }
+}

@@ -1,0 +1,17 @@
+---
+/**
+ * Renders text as word spans for the word-by-word heading reveal.
+ * Spaces stay as real text nodes so the heading reads normally to assistive tech.
+ */
+interface Props {
+  text: string;
+}
+
+const words = Astro.props.text.split(/\s+/).filter(Boolean);
+---
+
+{words.map((word, i) => (
+  <Fragment>
+    <span class="w" style={`--i:${i}`}>{word}</span>{i < words.length - 1 ? ' ' : ''}
+  </Fragment>
+))}

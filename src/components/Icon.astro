@@ -1,0 +1,39 @@
+---
+/** Inline 24×24 line icons used in the About credentials list. */
+interface Props {
+  name: 'award' | 'briefcase' | 'file-check' | 'map-pin';
+}
+
+const paths: Record<Props['name'], string[]> = {
+  award: [
+    'M10 11.667a5 5 0 1 0 0-10 5 5 0 0 0 0 10Z',
+    'm6.842 11.575-1.009 7.592 4.167-2.5 4.167 2.5-1.009-7.6',
+  ],
+  briefcase: [
+    'M18.333 5.833H1.667V17.5h16.666z',
+    'M13.333 17.5V4.167A1.667 1.667 0 0 0 11.667 2.5H8.333a1.667 1.667 0 0 0-1.666 1.667V17.5',
+  ],
+  'file-check': [
+    'M12.5 1.667H5a1.667 1.667 0 0 0-1.667 1.666v13.334A1.666 1.666 0 0 0 5 18.333h10a1.666 1.666 0 0 0 1.667-1.666V5.833z',
+    'M11.667 1.667v4.166h4.166M7.5 12.5l1.667 1.667 3.333-3.334',
+  ],
+  'map-pin': [
+    'M16.667 8.333c0 5-6.667 10-6.667 10s-6.667-5-6.667-10a6.667 6.667 0 0 1 13.334 0Z',
+    'M10 10.833a2.5 2.5 0 1 0 0-5 2.5 2.5 0 0 0 0 5Z',
+  ],
+};
+---
+
+<svg
+  class="icon"
+  width="24"
+  height="24"
+  viewBox="0 0 20 20"
+  fill="none"
+  stroke="#8F8B83"
+  stroke-width="1.167"
+  stroke-linecap="square"
+  aria-hidden="true"
+>
+  {paths[Astro.props.name].map((d) => <path d={d} />)}
+</svg>

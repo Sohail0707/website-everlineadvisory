@@ -1,0 +1,26 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+import { site } from '../data/site';
+---
+
+<BaseLayout title={`Page not found — ${site.name}`} noindex>
+  <main id="main" class="nf">
+    <p class="eyebrow">404</p>
+    <h1 class="t-h2">This page doesn’t exist.</h1>
+    <a class="btn btn--outline" href="/">Back to {site.name}</a>
+  </main>
+</BaseLayout>
+
+<style>
+  .nf {
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    justify-content: center;
+    gap: 24px;
+    max-width: 640px;
+    margin-inline: auto;
+    padding: var(--sp-xl) var(--gutter);
+  }
+</style>
