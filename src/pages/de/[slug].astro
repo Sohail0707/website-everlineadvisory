@@ -15,7 +15,9 @@ export function getStaticPaths() {
 
 const draftMode = isDraftMode(Astro.cookies);
 const result = await loadPage('de', Astro.params.slug!, draftMode);
-if (!result) return Astro.rewrite('/404');
+// No such page. (Not Astro.rewrite('/404'): in server mode the 404 page is a pre-rendered file,
+// and rewriting to it from a server-rendered route is not allowed.)
+if (!result) return new Response('Not found', { status: 404 });
 ---
 
 <SanityPage {...result} lang="de" draftMode={draftMode} />

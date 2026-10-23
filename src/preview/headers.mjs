@@ -20,11 +20,14 @@ export const COMMON_HEADERS = {
  * yet. If that response forbids framing, the browser shows "refused to connect" before draft
  * mode can even start. X-Frame-Options can't name an allowed origin, so only the CSP is sent.
  *
+ * www.sanity.io is listed too: a deployed Studio is usually opened inside Sanity's dashboard
+ * (www.sanity.io/@org/studio/…), and the browser checks *every* parent frame, not just the Studio.
+ *
  * @param {string} studioOrigin
  * @returns {Record<string, string>}
  */
 export function framingHeaders(studioOrigin) {
-  return { 'Content-Security-Policy': `frame-ancestors 'self' ${studioOrigin}` };
+  return { 'Content-Security-Policy': `frame-ancestors 'self' ${studioOrigin} https://www.sanity.io` };
 }
 
 /** Every cached page carries this tag; a Sanity publish purges it (routes/revalidate.ts). */

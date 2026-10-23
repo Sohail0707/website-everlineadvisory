@@ -62,7 +62,13 @@ export default function previewMode({ visualEditing, studioUrl }) {
         // (In server mode, React is still only sent to the browser when draft mode is on.)
         const component = visualEditing ? './VisualEditing.astro' : './NoVisualEditing.astro';
         updateConfig({
-          vite: { resolve: { alias: { '@preview/visual-editing': here(component) } } },
+          vite: {
+            resolve: { alias: { '@preview/visual-editing': here(component) } },
+            // Dev server only: pre-bundle the overlay so Vite converts its CommonJS dependencies
+            // (lodash, used by @sanity/mutate). Without this, `astro dev` fails to start the overlay with
+            // "lodash/isObject.js does not provide an export named 'default'". Builds aren't affected.
+            ...(visualEditing ? { optimizeDeps: { include: ['@sanity/visual-editing/react', '@sanity/mutate'] } } : {}),
+          },
         });
       },
 
