@@ -1,22 +1,21 @@
 ---
-import type { IllustrationName } from '../data/site';
+import { stegaClean } from '@sanity/client/stega';
+import type { ServiceBlockData } from '../lib/sanity/types';
 import SplitWords from './SplitWords.astro';
 import DataRoom from './illustrations/DataRoom.astro';
 import MonthlyClose from './illustrations/MonthlyClose.astro';
 import BoardDeck from './illustrations/BoardDeck.astro';
 
 interface Props {
-  id?: string;
-  heading: string;
-  eyebrow: string;
-  body: string;
-  illustration: IllustrationName;
-  side: 'left' | 'right';
+  block: ServiceBlockData;
 }
 
-const { id, heading, eyebrow, body, illustration, side } = Astro.props;
+const { block } = Astro.props;
+// Values used in logic or attributes must be stega-free (they carry invisible markers in draft mode).
+const side = stegaClean(block.side) ?? 'left';
+const id = stegaClean(block.anchor) || undefined;
 const illustrations = { 'data-room': DataRoom, 'monthly-close': MonthlyClose, 'board-deck': BoardDeck };
-const Illustration = illustrations[illustration];
+const Illustration = illustrations[stegaClean(block.illustration) ?? 'data-room'];
 ---
 
 <section class:list={['section', 'service', `service--${side}`]} id={id}>
@@ -26,9 +25,9 @@ const Illustration = illustrations[illustration];
     </div>
     <div class="service-copy">
       <div class="service-text">
-        <h2 class="t-h3 service-heading"><SplitWords text={heading} /></h2>
-        <p class="eyebrow">{eyebrow}</p>
-        <p class="t-body service-body">{body}</p>
+        <h2 class="t-h3 service-heading"><SplitWords text={block.heading} /></h2>
+        <p class="eyebrow">{block.eyebrow}</p>
+        <p class="t-body service-body">{block.body}</p>
       </div>
     </div>
   </div>

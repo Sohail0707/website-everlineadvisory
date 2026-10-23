@@ -7,25 +7,28 @@ export interface DayCell {
   iso?: string;
 }
 
-const MONTHS = [
-  'January', 'February', 'March', 'April', 'May', 'June',
-  'July', 'August', 'September', 'October', 'November', 'December',
-];
-const MONTHS_SHORT = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
-const WEEKDAYS_SHORT = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
-
 const pad = (n: number) => String(n).padStart(2, '0');
 export const toIso = (y: number, m: number, d: number) => `${y}-${pad(m + 1)}-${pad(d)}`;
 
-export function monthLabel(year: number, month: number) {
-  return `${MONTHS[month]} ${year}`;
+/** "September 2026". Names come from Intl (built into browsers and Node), so any locale works. */
+export function monthLabel(year: number, month: number, locale = 'en-US') {
+  return new Intl.DateTimeFormat(locale, { month: 'long', year: 'numeric' }).format(new Date(year, month, 1));
 }
 
-/** "Wed, Sep 16" */
-export function dayLabel(iso: string) {
+/** "Wed, Sep 16" (en-US) / "Mi., 16. Sept." (de-DE) */
+export function dayLabel(iso: string, locale = 'en-US') {
   const [y, m, d] = iso.split('-').map(Number);
-  const date = new Date(y, m - 1, d);
-  return `${WEEKDAYS_SHORT[date.getDay()]}, ${MONTHS_SHORT[m - 1]} ${d}`;
+  return new Intl.DateTimeFormat(locale, { weekday: 'short', month: 'short', day: 'numeric' }).format(new Date(y, m - 1, d));
+}
+
+/** Weekday headers, Sunday first: short letters ("S", "M"…) and full names for tooltips. */
+export function weekdayNames(locale = 'en-US') {
+  // 4 Oct 2026 is a Sunday.
+  const days = Array.from({ length: 7 }, (_, i) => new Date(2026, 9, 4 + i));
+  return {
+    narrow: days.map((d) => new Intl.DateTimeFormat(locale, { weekday: 'narrow' }).format(d)),
+    long: days.map((d) => new Intl.DateTimeFormat(locale, { weekday: 'long' }).format(d)),
+  };
 }
 
 /** Calendar cells for a month, padded with blanks to whole weeks (Sunday first). */

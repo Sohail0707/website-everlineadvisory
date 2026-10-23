@@ -1,23 +1,32 @@
 ---
-import { nav, site } from '../data/site';
+import { stegaClean } from '@sanity/client/stega';
+import type { SettingsData } from '../lib/sanity/types';
+import { ui, type Lang } from '../lib/i18n';
+
+interface Props {
+  settings: SettingsData;
+  lang: Lang;
+}
+
+const { settings, lang } = Astro.props;
 ---
 
 <footer class="site-footer">
   <div class="footer-inner" data-reveal>
     <div class="footer-col">
-      <p class="footer-mark">{site.name}</p>
-      <p class="footer-tagline">{site.tagline}</p>
+      <p class="footer-mark">{settings.name}</p>
+      <p class="footer-tagline">{settings.tagline}</p>
     </div>
-    <nav class="footer-col" aria-label="Footer">
+    <nav class="footer-col" aria-label={ui[lang].footerNav}>
       <ul class="footer-links">
-        {nav.map((item) => (
-          <li><a href={item.href}>{item.label}</a></li>
+        {settings.nav?.map((item) => (
+          <li><a href={`#${stegaClean(item.anchor)}`}>{item.label}</a></li>
         ))}
       </ul>
     </nav>
     <div class="footer-col">
-      <a class="footer-email" href={`mailto:${site.email}`}>{site.email}</a>
-      <p class="footer-copy">{site.copyright}</p>
+      <a class="footer-email" href={`mailto:${stegaClean(settings.email)}`}>{settings.email}</a>
+      <p class="footer-copy">{settings.copyright}</p>
     </div>
   </div>
 </footer>

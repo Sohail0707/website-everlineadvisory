@@ -3,7 +3,19 @@
  * Contact form, wired for Netlify Forms (detected at deploy time from the static HTML).
  * Locally the POST has nowhere to go — test submissions on a Netlify deploy preview.
  */
-import { contact } from '../data/site';
+import { stegaClean } from '@sanity/client/stega';
+import type { ContactBlockData } from '../lib/sanity/types';
+import { ui, type Lang } from '../lib/i18n';
+
+interface Props {
+  block: ContactBlockData;
+  lang: Lang;
+}
+
+const { block, lang } = Astro.props;
+// Labels from Sanity. Placeholders are attributes, so they are stega-cleaned.
+const f: Partial<NonNullable<ContactBlockData['form']>> = block.form ?? {};
+const placeholder = (text: string | undefined) => stegaClean(text) ?? '';
 ---
 
 <form
@@ -17,44 +29,45 @@ import { contact } from '../data/site';
 >
   <input type="hidden" name="form-name" value="contact" />
   <p class="visually-hidden" aria-hidden="true">
-    <label>Leave this empty <input name="company-url" tabindex="-1" autocomplete="off" /></label>
+    <label>{ui[lang].honeypot} <input name="company-url" tabindex="-1" autocomplete="off" /></label>
   </p>
 
   <label class="field">
-    <span class="field-label">Name</span>
-    <input class="control" type="text" name="name" placeholder="Jane Smith" autocomplete="name" required />
+    <span class="field-label">{f.nameLabel}</span>
+    <input class="control" type="text" name="name" placeholder={placeholder(f.namePlaceholder)} autocomplete="name" required />
   </label>
   <label class="field">
-    <span class="field-label">Email</span>
-    <input class="control" type="email" name="email" placeholder="example@xyz.abc" autocomplete="email" required />
+    <span class="field-label">{f.emailLabel}</span>
+    <input class="control" type="email" name="email" placeholder={placeholder(f.emailPlaceholder)} autocomplete="email" required />
   </label>
   <label class="field field--full">
-    <span class="field-label">Company</span>
-    <input class="control" type="text" name="company" placeholder="What is your company name?" autocomplete="organization" />
+    <span class="field-label">{f.companyLabel}</span>
+    <input class="control" type="text" name="company" placeholder={placeholder(f.companyPlaceholder)} autocomplete="organization" />
   </label>
   <label class="field">
-    <span class="field-label">Stage</span>
+    <span class="field-label">{f.stageLabel}</span>
     <span class="select">
       <select class="control" name="stage" required>
-        <option value="" disabled selected hidden>Select…</option>
-        {contact.stages.map((s) => <option>{s}</option>)}
+        <option value="" disabled selected hidden>{placeholder(f.selectPlaceholder)}</option>
+        {/* The value is what Netlify receives, so it must be clean; the visible text keeps stega. */}
+        {block.stages?.map((s) => <option value={stegaClean(s)}>{s}</option>)}
       </select>
     </span>
   </label>
   <label class="field">
-    <span class="field-label">What do you need help with?</span>
+    <span class="field-label">{f.needLabel}</span>
     <span class="select">
       <select class="control" name="need" required>
-        <option value="" disabled selected hidden>Select…</option>
-        {contact.needs.map((n) => <option>{n}</option>)}
+        <option value="" disabled selected hidden>{placeholder(f.selectPlaceholder)}</option>
+        {block.needs?.map((n) => <option value={stegaClean(n)}>{n}</option>)}
       </select>
     </span>
   </label>
   <label class="field field--full">
-    <span class="field-label">Message</span>
-    <textarea class="control control--area" name="message" placeholder="Anything else should I know before we talk?"></textarea>
+    <span class="field-label">{f.messageLabel}</span>
+    <textarea class="control control--area" name="message" placeholder={placeholder(f.messagePlaceholder)}></textarea>
   </label>
-  <button class="send field--full" type="submit">Send</button>
+  <button class="send field--full" type="submit">{f.submitLabel}</button>
 </form>
 
 <style>

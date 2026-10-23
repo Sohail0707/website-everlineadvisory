@@ -3,15 +3,23 @@
  * Renders text as word spans for the word-by-word heading reveal.
  * Spaces stay as real text nodes so the heading reads normally to assistive tech.
  */
+import { stegaClean } from '@sanity/client/stega';
+
 interface Props {
-  text: string;
+  text: string | null | undefined;
 }
 
-const words = Astro.props.text.split(/\s+/).filter(Boolean);
+const text = Astro.props.text ?? '';
+// In draft mode the text ends with invisible stega characters (Visual Editing's "source" marker).
+// Split only the clean text, otherwise the marker would stick to the last word and only that
+// word would be clickable. The marker is re-added as a loose text node so the whole heading is.
+const clean = stegaClean(text);
+const marker = text.startsWith(clean) ? text.slice(clean.length) : '';
+const words = clean.split(/\s+/).filter(Boolean);
 ---
 
 {words.map((word, i) => (
   <Fragment>
     <span class="w" style={`--i:${i}`}>{word}</span>{i < words.length - 1 ? ' ' : ''}
   </Fragment>
-))}
+))}{marker}

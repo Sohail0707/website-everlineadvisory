@@ -1,31 +1,63 @@
 ---
-import { site, nav, bookCta } from '../data/site';
+import { stegaClean } from '@sanity/client/stega';
+import type { SettingsData } from '../lib/sanity/types';
+import { ui, type Lang, type LanguageLink } from '../lib/i18n';
+
+interface Props {
+  settings: SettingsData;
+  lang: Lang;
+  /** The current page in every language (built in pages/_Page.astro). */
+  languages: LanguageLink[];
+}
+
+const { settings, lang, languages } = Astro.props;
+const t = ui[lang];
 ---
 
 <header class="site-header" data-open="false">
   <div class="bar">
-    <a class="wordmark" href="#home">{site.name}</a>
+    <a class="wordmark" href="#home">{settings.name}</a>
 
     <button
       class="menu-btn"
       type="button"
       aria-expanded="false"
       aria-controls="site-nav"
-      aria-label="Open menu"
+      aria-label={t.openMenu}
+      data-open-label={t.openMenu}
+      data-close-label={t.closeMenu}
     >
       <span class="menu-icon" aria-hidden="true"><span></span><span></span><span></span></span>
     </button>
 
     <div class="nav-wrap" id="site-nav">
       <div class="nav-inner">
-        <nav aria-label="Primary">
+        <nav aria-label={t.primaryNav}>
           <ul class="nav-list">
-            {nav.map((item) => (
-              <li><a class="nav-link" href={item.href}>{item.label}</a></li>
+            {settings.nav?.map((item) => (
+              <li><a class="nav-link" href={`#${stegaClean(item.anchor)}`}>{item.label}</a></li>
             ))}
           </ul>
         </nav>
-        <a class="btn btn--outline nav-cta" href={bookCta.href}>{bookCta.label}</a>
+        <ul class="nav-list lang-list" aria-label={t.languageNav}>
+          {languages.map((l) => (
+            <li>
+              <a
+                class="nav-link lang-link"
+                href={l.href}
+                hreflang={l.lang}
+                lang={l.lang}
+                title={l.name}
+                aria-current={l.current ? 'page' : undefined}
+              >
+                {l.label}
+              </a>
+            </li>
+          ))}
+        </ul>
+        {settings.bookCta && (
+          <a class="btn btn--outline nav-cta" href={`#${stegaClean(settings.bookCta.anchor)}`}>{settings.bookCta.label}</a>
+        )}
       </div>
     </div>
   </div>
@@ -39,7 +71,7 @@ import { site, nav, bookCta } from '../data/site';
     const setOpen = (open: boolean) => {
       header.dataset.open = String(open);
       button.setAttribute('aria-expanded', String(open));
-      button.setAttribute('aria-label', open ? 'Close menu' : 'Open menu');
+      button.setAttribute('aria-label', (open ? button.dataset.closeLabel : button.dataset.openLabel) ?? '');
     };
 
     button.addEventListener('click', () => setOpen(header.dataset.open !== 'true'));
@@ -111,6 +143,13 @@ import { site, nav, bookCta } from '../data/site';
     transition: color 0.2s ease;
   }
   .nav-link:hover {
+    color: var(--c-text);
+  }
+  /* Language switcher: same type as the menu, tighter spacing, current language darker. */
+  .lang-list {
+    gap: 12px;
+  }
+  .lang-link[aria-current] {
     color: var(--c-text);
   }
 
@@ -204,6 +243,10 @@ import { site, nav, bookCta } from '../data/site';
       align-items: flex-start;
       gap: 20px;
       padding-top: 18px;
+    }
+    .lang-list {
+      flex-direction: row;
+      padding-top: 0;
     }
     .nav-cta {
       margin-bottom: 26px;

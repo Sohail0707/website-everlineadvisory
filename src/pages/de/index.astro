@@ -1,0 +1,11 @@
+---
+/** German home page ("/de/"). The content is the Sanity `page` with slug "home" and language "de". */
+import SanityPage from '../../components/SanityPage.astro';
+import { loadPage } from '../../lib/sanity/load-page';
+import { isDraftMode } from '../../lib/draft-mode';
+
+const result = await loadPage('de', 'home', isDraftMode(Astro.cookies));
+if (!result) throw new Error('No German "home" page in Sanity. Run the seed script (README → Seed).');
+---
+
+<SanityPage {...result} lang="de" />

@@ -1,0 +1,54 @@
+---
+/** The full HTML page for one Sanity `page` document, in one language. */
+import BaseLayout from '../layouts/BaseLayout.astro';
+import Header from './Header.astro';
+import Footer from './Footer.astro';
+import PageBuilder from './PageBuilder.astro';
+import type { PageData, SettingsData } from '../lib/sanity/types';
+import type { Lang, LanguageLink } from '../lib/i18n';
+import { buildSrcset, HERO_SIZES, HERO_WIDTHS } from '../lib/sanity/image';
+
+interface Props {
+  page: PageData;
+  settings: SettingsData;
+  lang: Lang;
+  languages: LanguageLink[];
+}
+
+const { page, settings, lang, languages } = Astro.props;
+const blocks = page.pageBuilder ?? [];
+
+// Preload the hero photo so it starts downloading before the CSS is parsed: it is the LCP element.
+// Same srcset/sizes as Hero.astro, so the browser reuses the preloaded file.
+const hero = blocks.find((block) => block._type === 'heroBlock');
+const heroImage = hero?._type === 'heroBlock' && hero.image?.asset ? hero.image : null;
+---
+
+<BaseLayout
+  lang={lang}
+  title={page.seo?.title || settings.seoTitle}
+  description={page.seo?.description || settings.seoDescription}
+  siteName={settings.name}
+  ogImage={page.seo?.ogImage?.asset?.url}
+  languages={languages}
+>
+  <Fragment slot="head">
+    {heroImage && (
+      <Fragment>
+        <link rel="preconnect" href="https://cdn.sanity.io" />
+        <link
+          rel="preload"
+          as="image"
+          imagesrcset={buildSrcset(heroImage, HERO_WIDTHS)}
+          imagesizes={HERO_SIZES}
+          fetchpriority="high"
+        />
+      </Fragment>
+    )}
+  </Fragment>
+  <Header settings={settings} lang={lang} languages={languages} />
+  <main id="main">
+    <PageBuilder blocks={blocks} settings={settings} lang={lang} />
+  </main>
+  <Footer settings={settings} lang={lang} />
+</BaseLayout>

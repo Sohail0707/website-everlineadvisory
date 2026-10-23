@@ -1,0 +1,36 @@
+---
+/**
+ * Renders Sanity rich text (Portable Text) as plain <p> paragraphs with bold/italic.
+ * The FAQ answer field only allows exactly that (see studio/schemaTypes/blocks/faqBlock.ts),
+ * so a tiny renderer is enough. If the schema ever allows lists or links, switch to the
+ * `astro-portabletext` package instead of growing this.
+ */
+interface Span {
+  _key: string;
+  text?: string;
+  marks?: string[];
+}
+interface TextBlock {
+  _key: string;
+  _type: string;
+  children?: Span[];
+}
+
+interface Props {
+  value: TextBlock[] | null | undefined;
+}
+
+const blocks = (Astro.props.value ?? []).filter((block) => block._type === 'block');
+---
+
+{blocks.map((block) => (
+  <p>
+    {block.children?.map((span) => {
+      const marks = span.marks ?? [];
+      if (marks.includes('strong') && marks.includes('em')) return <strong><em>{span.text}</em></strong>;
+      if (marks.includes('strong')) return <strong>{span.text}</strong>;
+      if (marks.includes('em')) return <em>{span.text}</em>;
+      return span.text;
+    })}
+  </p>
+))}

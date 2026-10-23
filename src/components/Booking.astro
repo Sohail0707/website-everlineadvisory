@@ -1,17 +1,25 @@
 ---
-import { booking } from '../data/site';
+import type { BookingBlockData } from '../lib/sanity/types';
+import type { Lang } from '../lib/i18n';
 import SplitWords from './SplitWords.astro';
 import BookingPanel from './BookingPanel.astro';
+
+interface Props {
+  block: BookingBlockData;
+  lang: Lang;
+}
+
+const { block, lang } = Astro.props;
 ---
 
 <section class="section booking" id="book" aria-labelledby="book-heading">
   <div class="container booking-inner" data-reveal>
     <div class="booking-steps">
-      <h2 id="book-heading" class="t-h2"><SplitWords text={booking.heading} /></h2>
+      <h2 id="book-heading" class="t-h2"><SplitWords text={block.heading} /></h2>
       <div class="steps-wrap">
-        <h3 class="eyebrow steps-heading">{booking.stepsHeading}</h3>
+        <h3 class="eyebrow steps-heading">{block.stepsHeading}</h3>
         <ol class="steps">
-          {booking.steps.map((step, i) => (
+          {block.steps?.map((step, i) => (
             <li class="step">
               <p class="step-num" aria-hidden="true">{String(i + 1).padStart(2, '0')}</p>
               <div class="step-text">
@@ -23,7 +31,7 @@ import BookingPanel from './BookingPanel.astro';
         </ol>
       </div>
     </div>
-    <BookingPanel {...booking.panel} />
+    {block.panel && <BookingPanel panel={block.panel} lang={lang} />}
   </div>
 </section>
 

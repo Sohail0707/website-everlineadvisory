@@ -4,25 +4,30 @@
  * Server-renders the initial month so there is no layout shift; the client script only
  * handles month navigation and selection. "Confirm" hands the chosen slot to the contact form.
  */
-import { buildMonth, dayLabel, firstOpenDay, monthLabel, todayIso } from '../scripts/calendar';
+import { stegaClean } from '@sanity/client/stega';
+import type { BookingBlockData } from '../lib/sanity/types';
+import { localeFor, ui, type Lang } from '../lib/i18n';
+import { buildMonth, dayLabel, firstOpenDay, monthLabel, todayIso, weekdayNames } from '../scripts/calendar';
 
 interface Props {
-  title: string;
-  label: string;
-  meta: string;
-  timeSlots: string[];
-  defaultSlot: string;
-  openWeekdays: number[];
+  panel: NonNullable<BookingBlockData['panel']>;
+  lang: Lang;
 }
 
-const { title, label, meta, timeSlots, defaultSlot, openWeekdays } = Astro.props;
+const { panel, lang } = Astro.props;
+const t = ui[lang];
+const locale = localeFor(lang);
+// Time slots, the default slot and the weekdays drive logic and data attributes: clean them.
+const timeSlots = stegaClean(panel.timeSlots) ?? [];
+const defaultSlot = stegaClean(panel.defaultSlot) ?? timeSlots[0] ?? '';
+const openWeekdays = stegaClean(panel.openWeekdays) ?? [];
+const messageTemplate = stegaClean(panel.messageTemplate) ?? '';
 
 const today = todayIso();
 const selected = firstOpenDay(today, openWeekdays);
 const [y, m] = selected.split('-').map(Number);
 const cells = buildMonth(y, m - 1, today, openWeekdays);
-const weekdays = ['S', 'M', 'T', 'W', 'T', 'F', 'S'];
-const weekdayNames = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+const weekdays = weekdayNames(locale);
 ---
 
 <div
@@ -31,23 +36,25 @@ const weekdayNames = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'F
   data-open-weekdays={openWeekdays.join(',')}
   data-selected={selected}
   data-slot={defaultSlot}
+  data-locale={locale}
+  data-message={messageTemplate}
 >
   <div class="bp-panel">
     <div class="bp-head">
-      <h3 class="bp-title">{title}</h3>
-      <span class="bp-label">{label}</span>
+      <h3 class="bp-title">{panel.title}</h3>
+      <span class="bp-label">{panel.label}</span>
     </div>
     <div class="bp-body">
       <div class="bp-cal">
         <div class="bp-nav">
-          <span class="bp-month" aria-live="polite" data-month>{monthLabel(y, m - 1)}</span>
+          <span class="bp-month" aria-live="polite" data-month>{monthLabel(y, m - 1, locale)}</span>
           <div class="bp-arrows">
-            <button class="bp-arrow" type="button" data-prev aria-label="Previous month">‹</button>
-            <button class="bp-arrow" type="button" data-next aria-label="Next month">›</button>
+            <button class="bp-arrow" type="button" data-prev aria-label={t.previousMonth}>‹</button>
+            <button class="bp-arrow" type="button" data-next aria-label={t.nextMonth}>›</button>
           </div>
         </div>
-        <div class="bp-grid" role="group" aria-label="Choose a date">
-          {weekdays.map((d, i) => <span class="bp-cell" data-head title={weekdayNames[i]} aria-hidden="true">{d}</span>)}
+        <div class="bp-grid" role="group" aria-label={t.chooseDate}>
+          {weekdays.narrow.map((d, i) => <span class="bp-cell" data-head title={weekdays.long[i]} aria-hidden="true">{d}</span>)}
           <div class="bp-days" data-days>
             {cells.map((c) =>
               c.day === null ? (
@@ -61,7 +68,7 @@ const weekdayNames = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'F
                   data-closed={c.open ? undefined : ''}
                   data-on={c.iso === selected ? '' : undefined}
                   aria-pressed={c.iso === selected ? 'true' : 'false'}
-                  aria-label={dayLabel(c.iso!)}
+                  aria-label={dayLabel(c.iso!, locale)}
                   disabled={!c.open}
                 >
                   {c.day}
@@ -71,31 +78,31 @@ const weekdayNames = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'F
           </div>
         </div>
         <div class="bp-legend" aria-hidden="true">
-          <span class="bp-key"><span class="bp-swatch bp-swatch--on"></span>Selected</span>
-          <span class="bp-key"><span class="bp-swatch"></span>Available</span>
+          <span class="bp-key"><span class="bp-swatch bp-swatch--on"></span>{t.selected}</span>
+          <span class="bp-key"><span class="bp-swatch"></span>{t.available}</span>
         </div>
       </div>
       <div class="bp-rule"></div>
       <div class="bp-slots">
-        <div class="bp-date" data-date>{dayLabel(selected)}</div>
-        <div class="bp-meta">{meta}</div>
-        <div class="bp-list" role="group" aria-label="Choose a time">
-          {timeSlots.map((t) => (
+        <div class="bp-date" data-date>{dayLabel(selected, locale)}</div>
+        <div class="bp-meta">{panel.meta}</div>
+        <div class="bp-list" role="group" aria-label={t.chooseTime}>
+          {timeSlots.map((time) => (
             <button
               type="button"
               class="bp-slot"
-              data-time={t}
-              data-on={t === defaultSlot ? '' : undefined}
-              aria-pressed={t === defaultSlot ? 'true' : 'false'}
+              data-time={time}
+              data-on={time === defaultSlot ? '' : undefined}
+              aria-pressed={time === defaultSlot ? 'true' : 'false'}
             >
-              {t}
+              {time}
             </button>
           ))}
         </div>
       </div>
     </div>
-    <button class="bp-confirm" type="button" data-confirm>
-      Confirm — <span data-summary>{dayLabel(selected)} at {defaultSlot}</span>
+    <button class="bp-confirm" type="button" data-confirm data-at={t.at}>
+      {panel.confirmLabel} — <span data-summary>{dayLabel(selected, locale)} {t.at} {defaultSlot}</span>
     </button>
   </div>
 </div>
@@ -105,6 +112,10 @@ const weekdayNames = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'F
 
   document.querySelectorAll<HTMLElement>('[data-booking]').forEach((root) => {
     const openWeekdays = (root.dataset.openWeekdays ?? '').split(',').map(Number);
+    // Locale and the confirm message come from the server render (language + Sanity content).
+    const locale = root.dataset.locale ?? 'en-US';
+    const messageTemplate = root.dataset.message ?? '';
+    const at = root.querySelector<HTMLElement>('[data-confirm]')?.dataset.at ?? 'at';
     const today = todayIso();
     let selected = root.dataset.selected!;
     let slot = root.dataset.slot!;
@@ -121,7 +132,7 @@ const weekdayNames = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'F
     const summaryEl = $<HTMLElement>('[data-summary]');
 
     function renderDays() {
-      monthEl.textContent = monthLabel(viewY, viewM);
+      monthEl.textContent = monthLabel(viewY, viewM, locale);
       daysEl.replaceChildren(
         ...buildMonth(viewY, viewM, today, openWeekdays).map((c) => {
           if (c.day === null) {
@@ -134,7 +145,7 @@ const weekdayNames = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'F
           b.className = 'bp-cell';
           b.textContent = String(c.day);
           b.dataset.iso = c.iso;
-          b.setAttribute('aria-label', dayLabel(c.iso!));
+          b.setAttribute('aria-label', dayLabel(c.iso!, locale));
           if (c.open) b.dataset.open = '';
           else {
             b.dataset.closed = '';
@@ -152,8 +163,8 @@ const weekdayNames = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'F
     }
 
     function renderSelection() {
-      dateEl.textContent = dayLabel(selected);
-      summaryEl.textContent = `${dayLabel(selected)} at ${slot}`;
+      dateEl.textContent = dayLabel(selected, locale);
+      summaryEl.textContent = `${dayLabel(selected, locale)} ${at} ${slot}`;
       root.querySelectorAll<HTMLButtonElement>('.bp-slot').forEach((b) => {
         const on = b.dataset.time === slot;
         b.toggleAttribute('data-on', on);
@@ -193,7 +204,7 @@ const weekdayNames = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'F
     $('[data-confirm]').addEventListener('click', () => {
       const message = document.querySelector<HTMLTextAreaElement>('#contact-form textarea[name="message"]');
       if (message) {
-        const line = `I'd like to book the intro call on ${dayLabel(selected)} at ${slot} CT.`;
+        const line = messageTemplate.replace('{date}', dayLabel(selected, locale)).replace('{time}', slot);
         if (!message.value.includes(line)) message.value = message.value ? `${line}\n\n${message.value}` : line;
       }
       document.getElementById('contact')?.scrollIntoView({ behavior: 'smooth' });

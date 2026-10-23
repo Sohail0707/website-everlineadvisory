@@ -1,22 +1,33 @@
 ---
-import { contact, site } from '../data/site';
+import { stegaClean } from '@sanity/client/stega';
+import type { ContactBlockData } from '../lib/sanity/types';
+import type { Lang } from '../lib/i18n';
 import ContactForm from './ContactForm.astro';
 import SplitWords from './SplitWords.astro';
+
+interface Props {
+  block: ContactBlockData;
+  /** From Site settings. */
+  email: string;
+  lang: Lang;
+}
+
+const { block, email, lang } = Astro.props;
 ---
 
 <section class="section contact" id="contact" aria-labelledby="contact-heading">
   <div class="container contact-inner" data-reveal>
     <div class="contact-intro">
       <div class="contact-heading">
-        <h2 id="contact-heading" class="t-h2"><SplitWords text={contact.heading} /></h2>
-        <p class="t-body contact-body">{contact.body}</p>
+        <h2 id="contact-heading" class="t-h2"><SplitWords text={block.heading} /></h2>
+        <p class="t-body contact-body">{block.body}</p>
       </div>
       <div class="contact-direct">
-        <p class="direct-label">{contact.directLabel}</p>
-        <a class="direct-email" href={`mailto:${site.email}`}>{site.email}</a>
+        <p class="direct-label">{block.directLabel}</p>
+        <a class="direct-email" href={`mailto:${stegaClean(email)}`}>{email}</a>
       </div>
     </div>
-    <ContactForm />
+    <ContactForm block={block} lang={lang} />
   </div>
 </section>
 

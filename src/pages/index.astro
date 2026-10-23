@@ -1,25 +1,11 @@
 ---
-import BaseLayout from '../layouts/BaseLayout.astro';
-import Header from '../components/Header.astro';
-import Hero from '../components/Hero.astro';
-import About from '../components/About.astro';
-import ServiceSection from '../components/ServiceSection.astro';
-import Booking from '../components/Booking.astro';
-import FaqAccordion from '../components/FaqAccordion.astro';
-import Contact from '../components/Contact.astro';
-import Footer from '../components/Footer.astro';
-import { services } from '../data/site';
+/** English home page ("/"). The content is the Sanity `page` with slug "home" and language "en". */
+import SanityPage from '../components/SanityPage.astro';
+import { loadPage } from '../lib/sanity/load-page';
+import { isDraftMode } from '../lib/draft-mode';
+
+const result = await loadPage('en', 'home', isDraftMode(Astro.cookies));
+if (!result) throw new Error('No English "home" page in Sanity. Run the seed script (README → Seed).');
 ---
 
-<BaseLayout>
-  <Header />
-  <main id="main">
-    <Hero />
-    <About />
-    {services.map((service) => <ServiceSection {...service} />)}
-    <Booking />
-    <FaqAccordion />
-    <Contact />
-  </main>
-  <Footer />
-</BaseLayout>
+<SanityPage {...result} lang="en" />

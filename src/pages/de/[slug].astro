@@ -1,0 +1,20 @@
+---
+/**
+ * Any other German page ("/de/about/"…), one per Sanity `page` document.
+ * Static build: getStaticPaths lists every page up front.
+ * Preview build (server output): getStaticPaths is skipped and the page is looked up per request,
+ * so a page an editor just created shows up without a rebuild.
+ */
+import SanityPage from '../../components/SanityPage.astro';
+import { loadPage, staticPaths } from '../../lib/sanity/load-page';
+import { isDraftMode } from '../../lib/draft-mode';
+
+export function getStaticPaths() {
+  return staticPaths('de');
+}
+
+const result = await loadPage('de', Astro.params.slug!, isDraftMode(Astro.cookies));
+if (!result) return Astro.rewrite('/404');
+---
+
+<SanityPage {...result} lang="de" />

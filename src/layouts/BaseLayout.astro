@@ -1,34 +1,53 @@
 ---
 import '../styles/global.css';
-import { site } from '../data/site';
+import { stegaClean } from '@sanity/client/stega';
+import { DEFAULT_LANG, ui, type Lang, type LanguageLink } from '../lib/i18n';
 
 interface Props {
-  title?: string;
-  description?: string;
+  lang?: Lang;
+  title: string | null | undefined;
+  description?: string | null;
+  siteName?: string | null;
+  ogImage?: string | null;
+  /** The same page in every language: becomes <link rel="alternate" hreflang>. */
+  languages?: LanguageLink[];
   noindex?: boolean;
 }
 
-const { title = site.title, description = site.description, noindex = false } = Astro.props;
+const { lang = DEFAULT_LANG, languages = [], noindex = false } = Astro.props;
+// Everything in <head> is an attribute or plain text the browser never shows on the page,
+// so it must be stega-free: invisible markers would end up in Google results and share cards.
+const title = stegaClean(Astro.props.title) ?? '';
+const description = stegaClean(Astro.props.description) ?? '';
+const siteName = stegaClean(Astro.props.siteName) ?? '';
+const ogImage = stegaClean(Astro.props.ogImage);
+
+// Self-referencing canonical: every language version is its own canonical page.
 const canonical = new URL(Astro.url.pathname, Astro.site);
+const defaultVersion = languages.find((l) => l.lang === DEFAULT_LANG);
 ---
 
 <!doctype html>
-<html lang="en">
+<html lang={lang}>
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>{title}</title>
     <meta name="description" content={description} />
     <link rel="canonical" href={canonical} />
+    {languages.map((l) => <link rel="alternate" hreflang={l.lang} href={new URL(l.href, Astro.site)} />)}
+    {defaultVersion && <link rel="alternate" hreflang="x-default" href={new URL(defaultVersion.href, Astro.site)} />}
     {noindex && <meta name="robots" content="noindex" />}
     <meta name="theme-color" content="#ffffff" />
     <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
 
     <meta property="og:type" content="website" />
-    <meta property="og:site_name" content={site.name} />
+    <meta property="og:site_name" content={siteName} />
     <meta property="og:title" content={title} />
     <meta property="og:description" content={description} />
     <meta property="og:url" content={canonical} />
+    <meta property="og:locale" content={lang === 'de' ? 'de_DE' : 'en_US'} />
+    {ogImage && <meta property="og:image" content={ogImage} />}
     <meta name="twitter:card" content="summary_large_image" />
 
     <link rel="preload" href="/fonts/newsreader-var.woff2" as="font" type="font/woff2" crossorigin />
@@ -39,10 +58,11 @@ const canonical = new URL(Astro.url.pathname, Astro.site);
     <slot name="head" />
   </head>
   <body>
-    <a class="skip-link" href="#main">Skip to content</a>
+    <a class="skip-link" href="#main">{ui[lang].skipLink}</a>
     <slot />
     <script>
       import '../scripts/reveal';
     </script>
+    <slot name="body-end" />
   </body>
 </html>

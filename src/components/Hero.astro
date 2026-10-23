@@ -1,33 +1,50 @@
 ---
-import { Picture } from 'astro:assets';
-import heroImage from '../assets/hero-renata.jpg';
-import { hero } from '../data/site';
+import { stegaClean } from '@sanity/client/stega';
+import type { HeroBlockData } from '../lib/sanity/types';
+import { buildSrcset, hotspotPosition, urlFor, HERO_SIZES, HERO_WIDTHS } from '../lib/sanity/image';
+
+interface Props {
+  block: HeroBlockData;
+}
+
+const { block } = Astro.props;
+const image = block.image;
+const dimensions = image?.asset?.metadata?.dimensions;
+
+const srcset = image?.asset ? buildSrcset(image, HERO_WIDTHS) : undefined;
+const src = image?.asset ? urlFor(image).width(1280).url() : undefined;
 ---
 
 <!-- No reveal here on purpose: the portrait is the LCP element. -->
 <section class="hero" id="home" aria-labelledby="hero-heading">
   <div class="hero-grid">
     <div class="hero-media">
-      <Picture
-        src={heroImage}
-        alt={hero.imageAlt}
-        formats={['avif', 'webp']}
-        widths={[640, 960, 1280, 1600, 2000]}
-        sizes="(min-width: 840px) 64vw, 185vw"
-        priority
-        class="hero-img"
-      />
+      {src && (
+        <img
+          class="hero-img"
+          src={src}
+          srcset={srcset}
+          sizes={HERO_SIZES}
+          alt={stegaClean(image?.alt) ?? ''}
+          width={dimensions?.width}
+          height={dimensions?.height}
+          loading="eager"
+          decoding="async"
+          fetchpriority="high"
+          style={`object-position: ${hotspotPosition(image?.hotspot)}`}
+        />
+      )}
     </div>
     <div class="hero-copy">
       <div class="hero-text">
         <div class="hero-heading">
-          <p class="eyebrow">{hero.eyebrow}</p>
-          <h1 id="hero-heading" class="t-h1">{hero.heading}</h1>
+          <p class="eyebrow">{block.eyebrow}</p>
+          <h1 id="hero-heading" class="t-h1">{block.heading}</h1>
         </div>
-        <p class="hero-body t-body">{hero.body}</p>
+        <p class="hero-body t-body">{block.body}</p>
         <div class="hero-actions">
-          <a class="btn btn--solid" href={hero.cta.href}>{hero.cta.label}</a>
-          <p class="hero-note">{hero.note}</p>
+          {block.cta && <a class="btn btn--solid" href={`#${stegaClean(block.cta.anchor)}`}>{block.cta.label}</a>}
+          {block.note && <p class="hero-note">{block.note}</p>}
         </div>
       </div>
     </div>
@@ -50,16 +67,13 @@ import { hero } from '../data/site';
     min-height: 100%;
     background: #d9d9d7;
   }
-  .hero-media :global(picture),
-  .hero-media :global(img) {
+  .hero-media img {
     position: absolute;
     inset: 0;
     width: 100%;
     height: 100%;
-  }
-  .hero-media :global(img) {
+    /* object-position comes from the editor's hotspot (inline style) */
     object-fit: cover;
-    object-position: center;
   }
   .hero-copy {
     display: flex;

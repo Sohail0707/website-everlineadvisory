@@ -4,26 +4,29 @@
  * Phone: tap-to-expand accordion. Tablet/desktop: question | answer side by side, always open
  * (the summary is made non-interactive there).
  */
-import { getCollection, render } from 'astro:content';
-import { faq } from '../data/site';
+import type { FaqBlockData } from '../lib/sanity/types';
+import PortableText from './PortableText.astro';
 import SplitWords from './SplitWords.astro';
 
-const entries = (await getCollection('faq')).sort((a, b) => a.data.order - b.data.order);
-const items = await Promise.all(entries.map(async (entry) => ({ entry, ...(await render(entry)) })));
+interface Props {
+  block: FaqBlockData;
+}
+
+const { block } = Astro.props;
 ---
 
 <section class="section faq" aria-labelledby="faq-heading">
   <div class="container faq-inner" data-reveal>
-    <h2 id="faq-heading" class="t-h2 t-light"><SplitWords text={faq.heading} /></h2>
+    <h2 id="faq-heading" class="t-h2 t-light"><SplitWords text={block.heading} /></h2>
     <div class="faq-list">
-      {items.map(({ entry, Content }) => (
+      {block.items?.map((item) => (
         <details class="faq-item" open>
           <summary class="faq-q">
-            <span class="t-h4">{entry.data.question}</span>
+            <span class="t-h4">{item.question}</span>
             <span class="faq-icon" aria-hidden="true" />
           </summary>
           <div class="faq-a t-body">
-            <Content />
+            <PortableText value={item.answer} />
           </div>
         </details>
       ))}

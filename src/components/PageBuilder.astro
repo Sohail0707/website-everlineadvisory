@@ -1,0 +1,43 @@
+---
+/**
+ * Renders the page builder: one component per block type, in the order the editor chose.
+ * Adding a block? Add its schema in studio/, its query part in queries.ts, run `npm run typegen`,
+ * create the component, then add one line below (see CLAUDE.md → "Add a block").
+ */
+import type { Block, SettingsData } from '../lib/sanity/types';
+import type { Lang } from '../lib/i18n';
+import Hero from './Hero.astro';
+import About from './About.astro';
+import ServiceSection from './ServiceSection.astro';
+import Booking from './Booking.astro';
+import FaqAccordion from './FaqAccordion.astro';
+import Contact from './Contact.astro';
+
+interface Props {
+  blocks: Block[];
+  settings: SettingsData;
+  lang: Lang;
+}
+
+const { blocks, settings, lang } = Astro.props;
+---
+
+{blocks.map((block) => {
+  switch (block._type) {
+    case 'heroBlock':
+      return <Hero block={block} />;
+    case 'aboutBlock':
+      return <About block={block} />;
+    case 'serviceBlock':
+      return <ServiceSection block={block} />;
+    case 'bookingBlock':
+      return <Booking block={block} lang={lang} />;
+    case 'faqBlock':
+      return <FaqAccordion block={block} />;
+    case 'contactBlock':
+      return <Contact block={block} email={settings.email ?? ''} lang={lang} />;
+    default:
+      // A block type without a component yet: render nothing rather than break the page.
+      return null;
+  }
+})}

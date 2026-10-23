@@ -1,6 +1,14 @@
 ---
 import BaseLayout from '../layouts/BaseLayout.astro';
-import { site } from '../data/site';
+import { loadQuery } from '../lib/sanity/load-query';
+import { SETTINGS_QUERY } from '../lib/sanity/queries';
+import type { SETTINGS_QUERY_RESULT } from '../lib/sanity/sanity.types';
+
+// Always pre-rendered, also in the preview build: Netlify serves these as plain files.
+export const prerender = true;
+
+const { data: settings } = await loadQuery<SETTINGS_QUERY_RESULT>({ query: SETTINGS_QUERY, params: { lang: 'en' } });
+const site = { name: settings?.name ?? 'Everline Advisory' };
 ---
 
 <BaseLayout title={`Page not found — ${site.name}`} noindex>
