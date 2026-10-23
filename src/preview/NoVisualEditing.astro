@@ -1,0 +1,10 @@
+---
+/**
+ * Production build stand-in for VisualEditing.astro (see the alias in integration.mjs).
+ * Renders nothing and imports nothing, so no React or overlay code can end up in the static site.
+ */
+interface Props {
+  enabled: boolean;
+  lang: 'en' | 'de';
+}
+---

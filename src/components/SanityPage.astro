@@ -4,6 +4,8 @@ import BaseLayout from '../layouts/BaseLayout.astro';
 import Header from './Header.astro';
 import Footer from './Footer.astro';
 import PageBuilder from './PageBuilder.astro';
+// Real Visual Editing in the preview build, an empty component in production (see src/preview/).
+import VisualEditing from '@preview/visual-editing';
 import type { PageData, SettingsData } from '../lib/sanity/types';
 import type { Lang, LanguageLink } from '../lib/i18n';
 import { buildSrcset, HERO_SIZES, HERO_WIDTHS } from '../lib/sanity/image';
@@ -13,9 +15,10 @@ interface Props {
   settings: SettingsData;
   lang: Lang;
   languages: LanguageLink[];
+  draftMode: boolean;
 }
 
-const { page, settings, lang, languages } = Astro.props;
+const { page, settings, lang, languages, draftMode } = Astro.props;
 const blocks = page.pageBuilder ?? [];
 
 // Preload the hero photo so it starts downloading before the CSS is parsed: it is the LCP element.
@@ -51,4 +54,5 @@ const heroImage = hero?._type === 'heroBlock' && hero.image?.asset ? hero.image 
     <PageBuilder blocks={blocks} settings={settings} lang={lang} />
   </main>
   <Footer settings={settings} lang={lang} />
+  <VisualEditing slot="body-end" enabled={draftMode} lang={lang} />
 </BaseLayout>

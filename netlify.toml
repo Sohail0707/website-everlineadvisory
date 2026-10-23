@@ -5,22 +5,19 @@
 [build.environment]
   NODE_VERSION = "22"
 
-# Fingerprinted build assets and fonts never change: cache forever.
-[[headers]]
-  for = "/_astro/*"
-  [headers.values]
-    Cache-Control = "public, max-age=31536000, immutable"
+# Two build modes from one codebase (README → "Two build modes").
+# Production = static site. Deploy previews and branch deploys = server-rendered preview with
+# Visual Editing for the Sanity Studio. The secrets (SANITY_API_READ_TOKEN, SANITY_PREVIEW_SECRET)
+# are NOT here: set them in the Netlify UI, scoped to "Deploy previews" and "Branch deploys" only.
+[context.production.environment]
+  SANITY_VISUAL_EDITING = "false"
 
-[[headers]]
-  for = "/fonts/*"
-  [headers.values]
-    Cache-Control = "public, max-age=31536000, immutable"
-    Access-Control-Allow-Origin = "*"
+[context.deploy-preview.environment]
+  SANITY_VISUAL_EDITING = "true"
 
-[[headers]]
-  for = "/*"
-  [headers.values]
-    X-Content-Type-Options = "nosniff"
-    Referrer-Policy = "strict-origin-when-cross-origin"
-    X-Frame-Options = "DENY"
-    Permissions-Policy = "camera=(), microphone=(), geolocation=()"
+[context.branch-deploy.environment]
+  SANITY_VISUAL_EDITING = "true"
+
+# Headers: there are none here on purpose. netlify.toml headers can't differ per deploy context
+# and don't apply to server-rendered pages, so every build writes its own dist/_headers
+# (src/preview/integration.mjs) and the preview server adds them in middleware.

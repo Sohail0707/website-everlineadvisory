@@ -4,8 +4,9 @@ import SanityPage from '../components/SanityPage.astro';
 import { loadPage } from '../lib/sanity/load-page';
 import { isDraftMode } from '../lib/draft-mode';
 
-const result = await loadPage('en', 'home', isDraftMode(Astro.cookies));
+const draftMode = isDraftMode(Astro.cookies);
+const result = await loadPage('en', 'home', draftMode);
 if (!result) throw new Error('No English "home" page in Sanity. Run the seed script (README → Seed).');
 ---
 
-<SanityPage {...result} lang="en" />
+<SanityPage {...result} lang="en" draftMode={draftMode} />

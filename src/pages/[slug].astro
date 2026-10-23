@@ -13,8 +13,9 @@ export function getStaticPaths() {
   return staticPaths('en');
 }
 
-const result = await loadPage('en', Astro.params.slug!, isDraftMode(Astro.cookies));
+const draftMode = isDraftMode(Astro.cookies);
+const result = await loadPage('en', Astro.params.slug!, draftMode);
 if (!result) return Astro.rewrite('/404');
 ---
 
-<SanityPage {...result} lang="en" />
+<SanityPage {...result} lang="en" draftMode={draftMode} />

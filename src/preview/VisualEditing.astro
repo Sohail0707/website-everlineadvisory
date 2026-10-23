@@ -1,0 +1,45 @@
+---
+/**
+ * Preview build only. Imported as `@preview/visual-editing` (alias set in integration.mjs);
+ * the production build gets NoVisualEditing.astro instead.
+ *
+ * When draft mode is on:
+ * - mounts Sanity's Visual Editing overlay (a React island, `client:only` so it never server-renders).
+ *   It reads the invisible stega markers in the page text and makes every field clickable.
+ *   On each change in the Studio it reloads the page, which re-fetches the drafts on the server.
+ * - shows an "Exit preview" button when the page is opened directly (outside the Studio iframe).
+ */
+import { VisualEditing as SanityVisualEditing } from '@sanity/astro/visual-editing';
+
+interface Props {
+  enabled: boolean;
+  lang: 'en' | 'de';
+}
+
+const { enabled, lang } = Astro.props;
+const exitHref = `/api/draft-mode/disable?redirect=${encodeURIComponent(Astro.url.pathname)}`;
+const label = lang === 'de' ? 'Vorschau beenden' : 'Exit preview';
+---
+
+{enabled && (
+  <Fragment>
+    <SanityVisualEditing enabled zIndex={1000} />
+    <a class="exit-preview btn btn--solid" href={exitHref} data-exit-preview hidden>{label}</a>
+    <script is:inline>
+      // Inside the Studio's Presentation tool the Studio has its own controls: keep the page clean there.
+      if (window.self === window.top) document.querySelector('[data-exit-preview]')?.removeAttribute('hidden');
+    </script>
+  </Fragment>
+)}
+
+<style>
+  .exit-preview {
+    position: fixed;
+    right: var(--sp-sm);
+    bottom: var(--sp-sm);
+    z-index: 1001;
+  }
+  .exit-preview[hidden] {
+    display: none;
+  }
+</style>
