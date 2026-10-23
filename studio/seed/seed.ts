@@ -46,7 +46,7 @@ function paragraph(text: string, key: string) {
   }
 }
 
-/** Reads src/content/faq/*.md (frontmatter: question, order; body: answer), sorted by order. */
+/** Reads the old FAQ markdown files (frontmatter: question, order; body: answer), sorted by order. */
 function readFaqMarkdown() {
   return readdirSync(FAQ_DIR)
     .filter((file) => file.endsWith('.md'))
