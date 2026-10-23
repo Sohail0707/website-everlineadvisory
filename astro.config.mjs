@@ -11,6 +11,8 @@ const env = { ...loadEnv(process.env.NODE_ENV ?? 'production', process.cwd(), ''
 
 const projectId = env.PUBLIC_SANITY_PROJECT_ID;
 const dataset = env.PUBLIC_SANITY_DATASET || 'production';
+// The deployed Studio: the only other site allowed to show this one in an iframe.
+const studioUrl = env.PUBLIC_SANITY_STUDIO_URL || 'http://localhost:3333';
 if (!projectId) throw new Error('PUBLIC_SANITY_PROJECT_ID is missing. Copy .env.example to .env.');
 
 /**
@@ -70,6 +72,6 @@ export default defineConfig({
     }),
     // React is only needed for the Visual Editing overlay, so static mode doesn't even load the integration.
     ...(visualEditing ? [react()] : []),
-    previewMode({ visualEditing }),
+    previewMode({ visualEditing, studioUrl }),
   ],
 });

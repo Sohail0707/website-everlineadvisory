@@ -20,7 +20,8 @@ import { COMMON_HEADERS, framingHeaders } from './headers.mjs';
 
 const here = (/** @type {string} */ path) => fileURLToPath(new URL(path, import.meta.url));
 
-function headersFile() {
+/** @param {string} studioOrigin */
+function headersFile(studioOrigin) {
   const lines = (/** @type {Record<string, string>} */ headers) =>
     Object.entries(headers).map(([name, value]) => `  ${name}: ${value}`);
   return [
@@ -32,17 +33,17 @@ function headersFile() {
     '  Access-Control-Allow-Origin: *',
     '/*',
     ...lines(COMMON_HEADERS),
-    // Static files are never draft pages, so nobody may frame them.
-    ...lines(framingHeaders(false, '')),
+    ...lines(framingHeaders(studioOrigin)),
     '',
   ].join('\n');
 }
 
 /**
- * @param {{ visualEditing: boolean }} options
+ * @param {{ visualEditing: boolean, studioUrl: string }} options
  * @returns {import('astro').AstroIntegration}
  */
-export default function previewMode({ visualEditing }) {
+export default function previewMode({ visualEditing, studioUrl }) {
+  const studioOrigin = new URL(studioUrl).origin;
   return {
     name: 'everline-preview-mode',
     hooks: {
@@ -66,7 +67,7 @@ export default function previewMode({ visualEditing }) {
       },
 
       'astro:build:done': async ({ dir }) => {
-        await writeFile(new URL('_headers', dir), headersFile());
+        await writeFile(new URL('_headers', dir), headersFile(studioOrigin));
       },
     },
   };

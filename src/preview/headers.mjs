@@ -12,20 +12,18 @@ export const COMMON_HEADERS = {
 };
 
 /**
- * Who may show the page in an iframe.
- * Public pages: nobody (clickjacking protection).
- * Draft-mode pages: only the Studio, because the Presentation tool shows the site in an iframe.
- * `frame-ancestors` is the modern replacement for X-Frame-Options, which can't name an origin,
- * so draft pages send only the CSP.
+ * Who may show the site in an iframe: only the site itself and the Sanity Studio
+ * (the Presentation tool shows the site in an iframe). Every other site is blocked, which is
+ * the clickjacking protection X-Frame-Options: DENY used to give.
  *
- * @param {boolean} allowStudio
+ * Why on every page and not only in draft mode: the Studio's first request has no draft cookie
+ * yet. If that response forbids framing, the browser shows "refused to connect" before draft
+ * mode can even start. X-Frame-Options can't name an allowed origin, so only the CSP is sent.
+ *
  * @param {string} studioOrigin
  * @returns {Record<string, string>}
  */
-export function framingHeaders(allowStudio, studioOrigin) {
-  if (!allowStudio) {
-    return { 'X-Frame-Options': 'DENY', 'Content-Security-Policy': "frame-ancestors 'none'" };
-  }
+export function framingHeaders(studioOrigin) {
   return { 'Content-Security-Policy': `frame-ancestors 'self' ${studioOrigin}` };
 }
 

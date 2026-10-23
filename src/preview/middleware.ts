@@ -1,8 +1,9 @@
 /**
  * Server mode only (added by src/preview/integration.mjs). Decides, per response:
- * - public page  → cached on Netlify's CDN until the next Sanity publish, framing denied
- * - draft mode   → never cached, framing allowed for the Studio (Presentation tool)
+ * - public page  → cached on Netlify's CDN until the next Sanity publish
+ * - draft mode   → never cached
  * - API routes   → never cached
+ * Every response may be framed by the Studio only (see framingHeaders).
  * Netlify doesn't apply _headers / netlify.toml headers to server-rendered responses,
  * which is why this happens here.
  */
@@ -25,6 +26,7 @@ export const onRequest = defineMiddleware(async (context, next) => {
     for (const [name, value] of Object.entries(headers)) result.headers.set(name, value);
   };
   set(COMMON_HEADERS);
+  set(framingHeaders(studioOrigin));
 
   const draftMode = isDraftMode(context.cookies);
   const isApi = context.url.pathname.startsWith('/api/');
@@ -33,11 +35,9 @@ export const onRequest = defineMiddleware(async (context, next) => {
 
   if (isCacheablePage) {
     set(publicCacheHeaders(DRAFT_MODE_COOKIE));
-    set(framingHeaders(false, studioOrigin));
   } else {
     // Drafts, redirects, errors and API calls must never be stored by the CDN.
     result.headers.set('Cache-Control', 'private, no-store');
-    set(framingHeaders(draftMode, studioOrigin));
   }
   return result;
 });
