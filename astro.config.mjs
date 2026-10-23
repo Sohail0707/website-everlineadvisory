@@ -11,16 +11,16 @@ const env = { ...loadEnv(process.env.NODE_ENV ?? 'production', process.cwd(), ''
 
 const projectId = env.PUBLIC_SANITY_PROJECT_ID;
 const dataset = env.PUBLIC_SANITY_DATASET || 'production';
-const studioUrl = env.PUBLIC_SANITY_STUDIO_URL || 'http://localhost:3333';
 if (!projectId) throw new Error('PUBLIC_SANITY_PROJECT_ID is missing. Copy .env.example to .env.');
 
 /**
  * One codebase, two build modes (README → "Two build modes"):
- * - SANITY_VISUAL_EDITING unset/false → production: fully static HTML, published content only,
- *   no adapter, no React. This is what visitors get.
- * - SANITY_VISUAL_EDITING=true → preview: server-rendered on Netlify Functions, so each request
- *   can check the draft-mode cookie and fetch drafts for the Studio's Presentation tool.
- *   (Sanity's Visual Editing needs a server: a static file can't show a draft saved a second ago.)
+ * - SANITY_VISUAL_EDITING=true → server mode (what Netlify runs). Pages are rendered by a Netlify
+ *   Function, then cached on Netlify's CDN, so visitors get cached HTML just like a static site.
+ *   A Sanity publish purges that cache through a webhook: no rebuild per content change.
+ *   The same deployment serves draft mode + Visual Editing to the Studio's Presentation tool.
+ * - false → static mode: plain static HTML, published content only, no adapter, no React.
+ *   For hosts without functions; content changes then need a rebuild.
  */
 const visualEditing = env.SANITY_VISUAL_EDITING === 'true';
 
@@ -50,6 +50,8 @@ export default defineConfig({
       SANITY_API_READ_TOKEN: envField.string({ context: 'server', access: 'secret', optional: true }),
       // Signs the draft-mode cookie (src/lib/draft-mode.ts).
       SANITY_PREVIEW_SECRET: envField.string({ context: 'server', access: 'secret', optional: true }),
+      // Shared with the Sanity webhook that purges the CDN cache (src/preview/routes/revalidate.ts).
+      SANITY_REVALIDATE_SECRET: envField.string({ context: 'server', access: 'secret', optional: true }),
       // Where stega links in Visual Editing point to (the deployed Studio).
       PUBLIC_SANITY_STUDIO_URL: envField.string({
         context: 'client',
@@ -66,8 +68,8 @@ export default defineConfig({
       // The published content is served from Sanity's CDN. loadQuery turns this off for drafts.
       useCdn: true,
     }),
-    // React is only needed for the Visual Editing overlay, so production doesn't even load the integration.
+    // React is only needed for the Visual Editing overlay, so static mode doesn't even load the integration.
     ...(visualEditing ? [react()] : []),
-    previewMode({ visualEditing, studioUrl }),
+    previewMode({ visualEditing }),
   ],
 });

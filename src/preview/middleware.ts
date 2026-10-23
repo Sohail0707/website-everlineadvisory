@@ -1,18 +1,17 @@
 /**
- * Preview build only (added by src/preview/integration.mjs).
+ * Server mode only (added by src/preview/integration.mjs). Decides, per response:
+ * - public page  → cached on Netlify's CDN until the next Sanity publish, framing denied
+ * - draft mode   → never cached, framing allowed for the Studio (Presentation tool)
+ * - API routes   → never cached
  * Netlify doesn't apply _headers / netlify.toml headers to server-rendered responses,
- * so the server sets them itself, using the same values as dist/_headers.
+ * which is why this happens here.
  */
 import { defineMiddleware } from 'astro:middleware';
 import { PUBLIC_SANITY_STUDIO_URL } from 'astro:env/client';
-import { COMMON_HEADERS, framingHeaders } from './headers.mjs';
-import { isDraftMode } from '../lib/draft-mode';
+import { COMMON_HEADERS, framingHeaders, publicCacheHeaders } from './headers.mjs';
+import { DRAFT_MODE_COOKIE, isDraftMode } from '../lib/draft-mode';
 
-const headers: Record<string, string> = {
-  ...COMMON_HEADERS,
-  // Allow framing by the Studio only (Presentation tool). Production keeps X-Frame-Options: DENY.
-  ...framingHeaders(true, new URL(PUBLIC_SANITY_STUDIO_URL).origin),
-};
+const studioOrigin = new URL(PUBLIC_SANITY_STUDIO_URL).origin;
 
 export const onRequest = defineMiddleware(async (context, next) => {
   // Pre-rendered pages (404, thanks) are plain files: their headers come from dist/_headers,
@@ -22,8 +21,23 @@ export const onRequest = defineMiddleware(async (context, next) => {
   const response = await next();
   // Some responses (e.g. redirects) have read-only headers: copy them into a new response first.
   const result = new Response(response.body, response);
-  for (const [name, value] of Object.entries(headers)) result.headers.set(name, value);
-  // Draft content must never be stored by a CDN or shared cache.
-  if (isDraftMode(context.cookies)) result.headers.set('Cache-Control', 'private, no-store');
+  const set = (headers: Record<string, string>) => {
+    for (const [name, value] of Object.entries(headers)) result.headers.set(name, value);
+  };
+  set(COMMON_HEADERS);
+
+  const draftMode = isDraftMode(context.cookies);
+  const isApi = context.url.pathname.startsWith('/api/');
+  const isCacheablePage =
+    !draftMode && !isApi && context.request.method === 'GET' && response.status === 200;
+
+  if (isCacheablePage) {
+    set(publicCacheHeaders(DRAFT_MODE_COOKIE));
+    set(framingHeaders(false, studioOrigin));
+  } else {
+    // Drafts, redirects, errors and API calls must never be stored by the CDN.
+    result.headers.set('Cache-Control', 'private, no-store');
+    set(framingHeaders(draftMode, studioOrigin));
+  }
   return result;
 });

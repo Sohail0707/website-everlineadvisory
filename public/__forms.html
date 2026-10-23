@@ -1,0 +1,26 @@
+<!doctype html>
+<!--
+  Netlify Forms finds forms by scanning the static HTML of a deploy. The real contact form is
+  server-rendered (it isn't a file in the deploy), so this hidden copy registers the form and its
+  field names. Keep the field names in sync with src/components/ContactForm.astro.
+  Visitors never see this page; submissions still go from the real form to /thanks/.
+-->
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="robots" content="noindex" />
+    <title>Form registration</title>
+  </head>
+  <body>
+    <form name="contact" method="POST" action="/thanks/" data-netlify="true" netlify-honeypot="company-url" hidden>
+      <input type="hidden" name="form-name" value="contact" />
+      <input name="company-url" />
+      <input name="name" />
+      <input type="email" name="email" />
+      <input name="company" />
+      <select name="stage"></select>
+      <select name="need"></select>
+      <textarea name="message"></textarea>
+    </form>
+  </body>
+</html>

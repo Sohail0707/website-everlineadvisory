@@ -4,20 +4,12 @@
 
 [build.environment]
   NODE_VERSION = "22"
-
-# Two build modes from one codebase (README → "Two build modes").
-# Production = static site. Deploy previews and branch deploys = server-rendered preview with
-# Visual Editing for the Sanity Studio. The secrets (SANITY_API_READ_TOKEN, SANITY_PREVIEW_SECRET)
-# are NOT here: set them in the Netlify UI, scoped to "Deploy previews" and "Branch deploys" only.
-[context.production.environment]
-  SANITY_VISUAL_EDITING = "false"
-
-[context.deploy-preview.environment]
+  # Server mode: pages are rendered by a Netlify Function and cached on Netlify's CDN until a
+  # Sanity publish purges them (README → "Two build modes"). Same for every deploy context.
+  # Secrets (SANITY_API_READ_TOKEN, SANITY_PREVIEW_SECRET, SANITY_REVALIDATE_SECRET) are NOT here:
+  # set them in the Netlify UI.
   SANITY_VISUAL_EDITING = "true"
 
-[context.branch-deploy.environment]
-  SANITY_VISUAL_EDITING = "true"
-
-# Headers: there are none here on purpose. netlify.toml headers can't differ per deploy context
-# and don't apply to server-rendered pages, so every build writes its own dist/_headers
-# (src/preview/integration.mjs) and the preview server adds them in middleware.
+# Headers: there are none here on purpose. Netlify doesn't apply netlify.toml headers to
+# server-rendered pages, so dist/_headers covers the static files (src/preview/integration.mjs)
+# and src/preview/middleware.ts sets security + cache headers on every rendered page.

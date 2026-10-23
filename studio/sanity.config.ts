@@ -11,7 +11,8 @@ import {LANGUAGES} from './constants'
 const projectId = process.env.SANITY_STUDIO_PROJECT_ID!
 const dataset = process.env.SANITY_STUDIO_DATASET || 'production'
 
-// The server-rendered preview deployment of the website (see README → "Two build modes").
+// The website itself: on Netlify it runs in server mode, so the same deployment that serves
+// visitors (cached) also serves drafts to the Presentation tool (see README → "Two build modes").
 // Falls back to the local Astro dev server.
 const previewUrl = process.env.SANITY_STUDIO_PREVIEW_URL || 'http://localhost:4321'
 
